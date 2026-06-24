@@ -28,6 +28,9 @@ export default function App() {
   })
   const wheelLockedRef = useRef(false)
   const touchStartRef = useRef(null)
+  const activeLayerRef = useRef(activeLayer)
+  const closeLayerRef = useRef(() => {})
+  const moveHorizontallyRef = useRef(() => false)
 
   const goBack = useCallback(() => {
     setLevel((current) => Math.max(LEVEL.artist, current - 1))
@@ -49,20 +52,9 @@ export default function App() {
 
   const moveHorizontally = useCallback(
     (direction) => {
-      if (activeLayer === 'notes') {
-        if (direction > 0) {
-          closeLayer()
-          return true
-        }
-        return false
-      }
-
-      if (activeLayer === 'elsewhere') {
-        if (direction < 0) {
-          closeLayer()
-          return true
-        }
-        return false
+      if (activeLayer === 'notes' || activeLayer === 'elsewhere') {
+        closeLayer()
+        return true
       }
 
       openLayer(direction < 0 ? 'notes' : 'elsewhere')
@@ -70,6 +62,10 @@ export default function App() {
     },
     [activeLayer, closeLayer, openLayer],
   )
+
+  activeLayerRef.current = activeLayer
+  closeLayerRef.current = closeLayer
+  moveHorizontallyRef.current = moveHorizontally
 
   const lockInput = useCallback((duration) => {
     wheelLockedRef.current = true
@@ -143,18 +139,30 @@ export default function App() {
       }
 
       const touch = event.touches[0]
-      const ignoreHorizontalSwipe = Boolean(
+      const startedOnNav = Boolean(
         touch.target instanceof Element &&
-          touch.target.closest(
-            '.reading-layer.is-active, .reading-navigation, .reading-desktop-return',
-          ),
+          touch.target.closest('.reading-navigation, .reading-desktop-return'),
       )
 
       touchStartRef.current = {
         x: touch.clientX,
         y: touch.clientY,
         startedAt: performance.now(),
-        ignoreHorizontalSwipe,
+        startedOnNav,
+        wasScrolling: false,
+      }
+    }
+
+    const onTouchMove = (event) => {
+      const start = touchStartRef.current
+      if (!start || start.wasScrolling || event.touches.length !== 1) return
+
+      const touch = event.touches[0]
+      const deltaY = touch.clientY - start.y
+      const deltaX = touch.clientX - start.x
+
+      if (Math.abs(deltaY) > 10 && Math.abs(deltaY) > Math.abs(deltaX)) {
+        start.wasScrolling = true
       }
     }
 
@@ -166,28 +174,36 @@ export default function App() {
       const start = touchStartRef.current
       touchStartRef.current = null
       if (!start || event.changedTouches.length !== 1) return
+      if (start.startedOnNav || wheelLockedRef.current) return
 
       const touch = event.changedTouches[0]
       const deltaX = touch.clientX - start.x
       const deltaY = touch.clientY - start.y
       const distance = Math.hypot(deltaX, deltaY)
       const elapsed = performance.now() - start.startedAt
+      const layer = activeLayerRef.current
 
-      if (distance < 55 || elapsed > 900 || wheelLockedRef.current) return
+      if (distance < 40 || elapsed > 1200) return
 
-      const horizontal = Math.abs(deltaX) > Math.abs(deltaY) * 1.2
-      const vertical = Math.abs(deltaY) > Math.abs(deltaX) * 1.2
+      const horizontal = Math.abs(deltaX) > Math.abs(deltaY) * 1.1
+      const vertical = Math.abs(deltaY) > Math.abs(deltaX) * 1.1
+
+      if (layer && horizontal && !start.wasScrolling) {
+        closeLayerRef.current()
+        lockInput(700)
+        return
+      }
+
       if (!horizontal && !vertical) return
-      if (horizontal && start.ignoreHorizontalSwipe) return
 
       if (horizontal) {
-        if (moveHorizontally(deltaX < 0 ? 1 : -1)) {
+        if (moveHorizontallyRef.current(deltaX < 0 ? 1 : -1)) {
           lockInput(700)
         }
         return
       }
 
-      if (!activeLayer && vertical) {
+      if (!layer && vertical) {
         lockInput(700)
         setLevel((current) => {
           const direction = deltaY < 0 ? 1 : -1
@@ -200,14 +216,16 @@ export default function App() {
     }
 
     window.addEventListener('touchstart', onTouchStart, { passive: true })
+    window.addEventListener('touchmove', onTouchMove, { passive: true })
     window.addEventListener('touchend', onTouchEnd, { passive: true })
     window.addEventListener('touchcancel', onTouchCancel, { passive: true })
     return () => {
       window.removeEventListener('touchstart', onTouchStart)
+      window.removeEventListener('touchmove', onTouchMove)
       window.removeEventListener('touchend', onTouchEnd)
       window.removeEventListener('touchcancel', onTouchCancel)
     }
-  }, [activeLayer, lockInput, moveHorizontally])
+  }, [lockInput])
 
   useEffect(() => {
     const hash = window.location.hash.slice(1)
