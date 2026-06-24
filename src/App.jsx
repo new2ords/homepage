@@ -39,30 +39,44 @@ export default function App() {
 
   const openLayer = useCallback((layer) => {
     setActiveLayer(layer)
-    window.history.pushState(null, '', `#${layer}`)
+    window.history.replaceState({ layer }, '', `#${layer}`)
   }, [])
 
   const closeLayer = useCallback(() => {
     setActiveLayer(null)
-    window.history.pushState(null, '', window.location.pathname)
+    window.history.replaceState(null, '', window.location.pathname)
   }, [])
 
   const moveHorizontally = useCallback(
     (direction) => {
       if (activeLayer === 'notes') {
-        if (direction > 0) closeLayer()
-        return
+        if (direction > 0) {
+          closeLayer()
+          return true
+        }
+        return false
       }
 
       if (activeLayer === 'elsewhere') {
-        if (direction < 0) closeLayer()
-        return
+        if (direction < 0) {
+          closeLayer()
+          return true
+        }
+        return false
       }
 
       openLayer(direction < 0 ? 'notes' : 'elsewhere')
+      return true
     },
     [activeLayer, closeLayer, openLayer],
   )
+
+  const lockInput = useCallback((duration) => {
+    wheelLockedRef.current = true
+    window.setTimeout(() => {
+      wheelLockedRef.current = false
+    }, duration)
+  }, [])
 
   useEffect(() => {
     const onKeyDown = (event) => {
@@ -97,25 +111,20 @@ export default function App() {
 
       if (Math.abs(horizontalDelta) >= 20) {
         if (wheelLockedRef.current) return
-        wheelLockedRef.current = true
-        moveHorizontally(horizontalDelta > 0 ? 1 : -1)
-        window.setTimeout(() => {
-          wheelLockedRef.current = false
-        }, 700)
+        if (moveHorizontally(horizontalDelta > 0 ? 1 : -1)) {
+          lockInput(700)
+        }
         return
       }
 
       if (activeLayer) return
       if (Math.abs(event.deltaY) < 20 || wheelLockedRef.current) return
 
-      wheelLockedRef.current = true
+      lockInput(900)
       setLevel((current) => {
         const direction = event.deltaY > 0 ? 1 : -1
         return Math.max(LEVEL.artist, Math.min(LEVEL.lyrics, current + direction))
       })
-      window.setTimeout(() => {
-        wheelLockedRef.current = false
-      }, 900)
     }
 
     window.addEventListener('keydown', onKeyDown)
@@ -124,7 +133,7 @@ export default function App() {
       window.removeEventListener('keydown', onKeyDown)
       window.removeEventListener('wheel', onWheel)
     }
-  }, [activeLayer, closeLayer, goBack, level, moveHorizontally])
+  }, [activeLayer, closeLayer, goBack, level, lockInput, moveHorizontally])
 
   useEffect(() => {
     const onTouchStart = (event) => {
@@ -134,11 +143,23 @@ export default function App() {
       }
 
       const touch = event.touches[0]
+      const ignoreHorizontalSwipe = Boolean(
+        touch.target instanceof Element &&
+          touch.target.closest(
+            '.reading-layer.is-active, .reading-navigation, .reading-desktop-return',
+          ),
+      )
+
       touchStartRef.current = {
         x: touch.clientX,
         y: touch.clientY,
         startedAt: performance.now(),
+        ignoreHorizontalSwipe,
       }
+    }
+
+    const onTouchCancel = () => {
+      touchStartRef.current = null
     }
 
     const onTouchEnd = (event) => {
@@ -157,11 +178,17 @@ export default function App() {
       const horizontal = Math.abs(deltaX) > Math.abs(deltaY) * 1.2
       const vertical = Math.abs(deltaY) > Math.abs(deltaX) * 1.2
       if (!horizontal && !vertical) return
+      if (horizontal && start.ignoreHorizontalSwipe) return
 
-      wheelLockedRef.current = true
       if (horizontal) {
-        moveHorizontally(deltaX < 0 ? 1 : -1)
-      } else if (!activeLayer && vertical) {
+        if (moveHorizontally(deltaX < 0 ? 1 : -1)) {
+          lockInput(700)
+        }
+        return
+      }
+
+      if (!activeLayer && vertical) {
+        lockInput(700)
         setLevel((current) => {
           const direction = deltaY < 0 ? 1 : -1
           return Math.max(
@@ -170,19 +197,24 @@ export default function App() {
           )
         })
       }
-
-      window.setTimeout(() => {
-        wheelLockedRef.current = false
-      }, 700)
     }
 
     window.addEventListener('touchstart', onTouchStart, { passive: true })
     window.addEventListener('touchend', onTouchEnd, { passive: true })
+    window.addEventListener('touchcancel', onTouchCancel, { passive: true })
     return () => {
       window.removeEventListener('touchstart', onTouchStart)
       window.removeEventListener('touchend', onTouchEnd)
+      window.removeEventListener('touchcancel', onTouchCancel)
     }
-  }, [activeLayer, moveHorizontally])
+  }, [activeLayer, lockInput, moveHorizontally])
+
+  useEffect(() => {
+    const hash = window.location.hash.slice(1)
+    if (hash === 'notes' || hash === 'elsewhere') {
+      window.history.replaceState({ layer: hash }, '', `#${hash}`)
+    }
+  }, [])
 
   useEffect(() => {
     const onHashChange = () => {
@@ -202,7 +234,7 @@ export default function App() {
 
   return (
     <main className={`experience level-${level}`}>
-      <Starfield level={level} />
+      <Starfield level={level} paused={activeLayer !== null} />
       <Atmosphere lyricsVisible={level === LEVEL.lyrics} />
       <EdgeNavigation
         visible={level === LEVEL.artist}

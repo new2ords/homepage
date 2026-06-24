@@ -5,9 +5,12 @@ import { mulberry32 } from '../lib/random'
 
 const CAMERA_DEPTHS = [1000, 500, -500]
 
-export default function Starfield({ level }) {
+export default function Starfield({ level, paused = false }) {
   const containerRef = useRef(null)
   const cameraRef = useRef(null)
+  const pausedRef = useRef(paused)
+
+  pausedRef.current = paused
 
   useEffect(() => {
     const container = containerRef.current
@@ -93,7 +96,12 @@ export default function Starfield({ level }) {
     scene.add(nebula)
 
     let frameId
+    let pageVisible = !document.hidden
+
     const render = () => {
+      frameId = window.requestAnimationFrame(render)
+      if (pausedRef.current || !pageVisible) return
+
       const time = performance.now() * 0.0001
       const pulse = Math.sin(time * 2) * 0.5 + 0.5
 
@@ -107,7 +115,10 @@ export default function Starfield({ level }) {
       }
 
       renderer.render(scene, camera)
-      frameId = window.requestAnimationFrame(render)
+    }
+
+    const onVisibilityChange = () => {
+      pageVisible = !document.hidden
     }
 
     const moveCameraX = gsap.quickTo(camera.position, 'x', {
@@ -132,12 +143,14 @@ export default function Starfield({ level }) {
 
     window.addEventListener('pointermove', onPointerMove)
     window.addEventListener('resize', onResize)
+    document.addEventListener('visibilitychange', onVisibilityChange)
     render()
 
     return () => {
       window.cancelAnimationFrame(frameId)
       window.removeEventListener('pointermove', onPointerMove)
       window.removeEventListener('resize', onResize)
+      document.removeEventListener('visibilitychange', onVisibilityChange)
       gsap.killTweensOf(camera.position)
       starGeometry.dispose()
       starMaterial.dispose()
