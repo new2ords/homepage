@@ -264,6 +264,12 @@ button:focus-visible {
   transform: translate(-50%, -40%);
 }
 
+.meteor-scroll-motion {
+  position: absolute;
+  inset: 0;
+  transform: scaleY(-1);
+}
+
 .meteor-scroll-line {
   position: absolute;
   top: 0;
@@ -1235,7 +1241,6 @@ button:focus-visible {
 
   .meteor-scroll-cue {
     height: 190%;
-    rotate: 180deg;
   }
 
   .reading-layer::before {
