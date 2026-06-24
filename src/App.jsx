@@ -35,7 +35,6 @@ export default function App() {
   const wheelLockedRef = useRef(false)
   const inputLockTimeoutRef = useRef(null)
   const touchStartRef = useRef(null)
-  const activeLayerRef = useRef(activeLayer)
   const closeLayerRef = useRef(() => {})
   const moveHorizontallyRef = useRef(() => false)
 
@@ -60,7 +59,6 @@ export default function App() {
     [activeLayer, closeLayer, openLayer],
   )
 
-  activeLayerRef.current = activeLayer
   closeLayerRef.current = closeLayer
   moveHorizontallyRef.current = moveHorizontally
 
