@@ -5,10 +5,13 @@ export default function EdgeNavigation({ visible, activeLayer, onOpen }) {
     <nav
       className={`edge-navigation ${hidden ? 'is-hidden' : ''}`}
       aria-label="Writing and external links"
+      aria-hidden={hidden}
+      inert={hidden ? '' : undefined}
     >
       <button
         className="edge-link edge-link-notes"
         type="button"
+        tabIndex={hidden ? -1 : undefined}
         onClick={() => onOpen('notes')}
       >
         <span>notes</span>
@@ -17,6 +20,7 @@ export default function EdgeNavigation({ visible, activeLayer, onOpen }) {
       <button
         className="edge-link edge-link-elsewhere"
         type="button"
+        tabIndex={hidden ? -1 : undefined}
         onClick={() => onOpen('elsewhere')}
       >
         <span>find me</span>

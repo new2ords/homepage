@@ -6,8 +6,8 @@ import LyricsGalaxy from './components/LyricsGalaxy'
 import ReadingLayer from './components/ReadingLayer'
 import Starfield from './components/Starfield'
 import { artist } from './data/artist'
+import { useReadingNavigation } from './hooks/useReadingNavigation'
 import { getAnalyticsPath, trackPageView } from './lib/analytics'
-import { appUrlForRoute, parseReadingRoute } from './lib/routing'
 
 const LEVEL = {
   artist: 0,
@@ -17,9 +17,14 @@ const LEVEL = {
 
 export default function App() {
   const [level, setLevel] = useState(LEVEL.artist)
-  const initialReadingRoute = parseReadingRoute()
-  const [activeLayer, setActiveLayer] = useState(initialReadingRoute.layer)
-  const [noteSlug, setNoteSlug] = useState(initialReadingRoute.noteSlug)
+  const {
+    activeLayer,
+    noteSlug,
+    openLayer,
+    openNote,
+    backToNotes,
+    closeLayer,
+  } = useReadingNavigation()
   const [playback, setPlayback] = useState({
     time: 0,
     duration: 0,
@@ -28,8 +33,8 @@ export default function App() {
     buffering: false,
   })
   const wheelLockedRef = useRef(false)
+  const inputLockTimeoutRef = useRef(null)
   const touchStartRef = useRef(null)
-  const activeLayerRef = useRef(activeLayer)
   const closeLayerRef = useRef(() => {})
   const moveHorizontallyRef = useRef(() => false)
 
@@ -39,42 +44,6 @@ export default function App() {
 
   const updatePlayback = useCallback((sample) => {
     setPlayback(sample)
-  }, [])
-
-  const openLayer = useCallback((layer) => {
-    setActiveLayer(layer)
-    setNoteSlug(null)
-    window.history.pushState(
-      { layer, noteSlug: null },
-      '',
-      appUrlForRoute(layer, null),
-    )
-  }, [])
-
-  const openNote = useCallback((slug) => {
-    setActiveLayer('notes')
-    setNoteSlug(slug)
-    window.history.pushState(
-      { layer: 'notes', noteSlug: slug },
-      '',
-      appUrlForRoute('notes', slug),
-    )
-  }, [])
-
-  const backToNotes = useCallback(() => {
-    setActiveLayer('notes')
-    setNoteSlug(null)
-    window.history.replaceState(
-      { layer: 'notes', noteSlug: null },
-      '',
-      appUrlForRoute('notes', null),
-    )
-  }, [])
-
-  const closeLayer = useCallback(() => {
-    setActiveLayer(null)
-    setNoteSlug(null)
-    window.history.replaceState(null, '', window.location.pathname)
   }, [])
 
   const moveHorizontally = useCallback(
@@ -90,16 +59,28 @@ export default function App() {
     [activeLayer, closeLayer, openLayer],
   )
 
-  activeLayerRef.current = activeLayer
   closeLayerRef.current = closeLayer
   moveHorizontallyRef.current = moveHorizontally
 
   const lockInput = useCallback((duration) => {
     wheelLockedRef.current = true
-    window.setTimeout(() => {
+    if (inputLockTimeoutRef.current) {
+      window.clearTimeout(inputLockTimeoutRef.current)
+    }
+    inputLockTimeoutRef.current = window.setTimeout(() => {
       wheelLockedRef.current = false
+      inputLockTimeoutRef.current = null
     }, duration)
   }, [])
+
+  useEffect(
+    () => () => {
+      if (inputLockTimeoutRef.current) {
+        window.clearTimeout(inputLockTimeoutRef.current)
+      }
+    },
+    [],
+  )
 
   useEffect(() => {
     const onKeyDown = (event) => {
@@ -176,16 +157,18 @@ export default function App() {
       }
 
       const touch = event.touches[0]
-      const startedOnNav = Boolean(
+      const startedOnInteractiveElement = Boolean(
         touch.target instanceof Element &&
-          touch.target.closest('.reading-navigation, .reading-desktop-return'),
+          touch.target.closest(
+            'a, button, iframe, input, select, textarea, [role="button"]',
+          ),
       )
 
       touchStartRef.current = {
         x: touch.clientX,
         y: touch.clientY,
         startedAt: performance.now(),
-        startedOnNav,
+        startedOnInteractiveElement,
         wasScrolling: false,
       }
     }
@@ -211,7 +194,7 @@ export default function App() {
       const start = touchStartRef.current
       touchStartRef.current = null
       if (!start || event.changedTouches.length !== 1) return
-      if (start.startedOnNav || wheelLockedRef.current) return
+      if (start.startedOnInteractiveElement || wheelLockedRef.current) return
 
       const touch = event.changedTouches[0]
       const deltaX = touch.clientX - start.x
@@ -226,6 +209,7 @@ export default function App() {
       const vertical = Math.abs(deltaY) > Math.abs(deltaX) * 1.1
 
       if (layer && horizontal && !start.wasScrolling) {
+        if (event.cancelable) event.preventDefault()
         closeLayerRef.current()
         lockInput(700)
         return
@@ -234,6 +218,7 @@ export default function App() {
       if (!horizontal && !vertical) return
 
       if (horizontal) {
+        if (event.cancelable) event.preventDefault()
         if (moveHorizontallyRef.current(deltaX < 0 ? 1 : -1)) {
           lockInput(700)
         }
@@ -241,6 +226,7 @@ export default function App() {
       }
 
       if (!layer && vertical) {
+        if (event.cancelable) event.preventDefault()
         lockInput(700)
         setLevel((current) => {
           const direction = deltaY < 0 ? 1 : -1
@@ -254,7 +240,7 @@ export default function App() {
 
     window.addEventListener('touchstart', onTouchStart, { passive: true })
     window.addEventListener('touchmove', onTouchMove, { passive: true })
-    window.addEventListener('touchend', onTouchEnd, { passive: true })
+    window.addEventListener('touchend', onTouchEnd, { passive: false })
     window.addEventListener('touchcancel', onTouchCancel, { passive: true })
     return () => {
       window.removeEventListener('touchstart', onTouchStart)
@@ -267,20 +253,6 @@ export default function App() {
   useEffect(() => {
     trackPageView(getAnalyticsPath(level, activeLayer, noteSlug))
   }, [level, activeLayer, noteSlug])
-
-  useEffect(() => {
-    const syncReadingRoute = () => {
-      const route = parseReadingRoute()
-      setActiveLayer(route.layer)
-      setNoteSlug(route.noteSlug)
-    }
-    window.addEventListener('hashchange', syncReadingRoute)
-    window.addEventListener('popstate', syncReadingRoute)
-    return () => {
-      window.removeEventListener('hashchange', syncReadingRoute)
-      window.removeEventListener('popstate', syncReadingRoute)
-    }
-  }, [])
 
   const enterRelease = () => setLevel(LEVEL.release)
   const enterLyrics = () => setLevel(LEVEL.lyrics)
@@ -299,6 +271,7 @@ export default function App() {
         className={`icon-button back-button ${level > LEVEL.artist ? 'is-visible' : ''}`}
         type="button"
         aria-label="Go back"
+        tabIndex={level > LEVEL.artist && !activeLayer ? undefined : -1}
         onClick={goBack}
       >
         <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -310,7 +283,11 @@ export default function App() {
         className={`center-view artist-view ${level === LEVEL.artist ? 'is-active' : ''}`}
         aria-hidden={level !== LEVEL.artist}
       >
-        <button className="title-button artist-name" onClick={enterRelease}>
+        <button
+          className="title-button artist-name"
+          tabIndex={level === LEVEL.artist && !activeLayer ? undefined : -1}
+          onClick={enterRelease}
+        >
           <span className="meteor-scroll-cue" aria-hidden="true">
             <span className="meteor-scroll-line" />
             <span className="meteor-scroll-head" />
@@ -333,7 +310,11 @@ export default function App() {
         className={`center-view song-view ${level === LEVEL.release ? 'is-active' : ''}`}
         aria-hidden={level !== LEVEL.release}
       >
-        <button className="title-button song-name" onClick={enterLyrics}>
+        <button
+          className="title-button song-name"
+          tabIndex={level === LEVEL.release && !activeLayer ? undefined : -1}
+          onClick={enterLyrics}
+        >
           <span className="meteor-scroll-cue" aria-hidden="true">
             <span className="meteor-scroll-line" />
             <span className="meteor-scroll-head" />

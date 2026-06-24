@@ -12,11 +12,24 @@ export default function ReadingLayer({
   onBackToNotes,
 }) {
   const notesLayerRef = useRef(null)
+  const elsewhereLayerRef = useRef(null)
 
   useEffect(() => {
     if (layer === 'notes' && notesLayerRef.current) {
       notesLayerRef.current.scrollTop = 0
     }
+    const activeLayer =
+      layer === 'notes'
+        ? notesLayerRef.current
+        : layer === 'elsewhere'
+          ? elsewhereLayerRef.current
+          : null
+    if (!activeLayer) return undefined
+
+    const frame = window.requestAnimationFrame(() => {
+      activeLayer.focus({ preventScroll: true })
+    })
+    return () => window.cancelAnimationFrame(frame)
   }, [layer, noteSlug])
 
   return (
@@ -30,7 +43,8 @@ export default function ReadingLayer({
         aria-modal={layer === 'notes' ? 'true' : undefined}
         aria-hidden={layer !== 'notes'}
         aria-labelledby={noteSlug ? 'note-heading' : 'notes-heading'}
-        tabIndex={layer === 'notes' ? undefined : -1}
+        inert={layer === 'notes' ? undefined : ''}
+        tabIndex={layer === 'notes' ? -1 : undefined}
       >
         <Notes
           noteSlug={noteSlug}
@@ -40,6 +54,7 @@ export default function ReadingLayer({
       </section>
 
       <section
+        ref={elsewhereLayerRef}
         className={`reading-layer reading-layer-elsewhere ${
           layer === 'elsewhere' ? 'is-active' : ''
         }`}
@@ -47,7 +62,8 @@ export default function ReadingLayer({
         aria-modal={layer === 'elsewhere' ? 'true' : undefined}
         aria-hidden={layer !== 'elsewhere'}
         aria-labelledby="elsewhere-heading"
-        tabIndex={layer === 'elsewhere' ? undefined : -1}
+        inert={layer === 'elsewhere' ? undefined : ''}
+        tabIndex={layer === 'elsewhere' ? -1 : undefined}
       >
         <Elsewhere />
       </section>
@@ -57,6 +73,7 @@ export default function ReadingLayer({
         type="button"
         aria-label="Return to the main page"
         aria-hidden={!layer}
+        inert={layer ? undefined : ''}
         tabIndex={layer ? undefined : -1}
         onClick={onClose}
       >
@@ -67,7 +84,7 @@ export default function ReadingLayer({
         className={`reading-navigation ${layer ? 'is-visible' : ''}`}
         aria-label="Reading pages"
         aria-hidden={!layer}
-        tabIndex={layer ? undefined : -1}
+        inert={layer ? undefined : ''}
       >
         <button
           type="button"
