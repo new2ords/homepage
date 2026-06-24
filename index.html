@@ -8,9 +8,52 @@
       content="new²ords — music and visual work."
     />
     <meta name="theme-color" content="#020408" />
-    <title>new²ords // meteor</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>new²ords</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        background: #020408;
+      }
+
+      #root {
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+      }
+
+      #boot-screen {
+        position: fixed;
+        z-index: 9999;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        background: #020408;
+        color: rgba(243, 244, 246, 0.72);
+        font-family: Garamond, Georgia, serif;
+        font-size: clamp(2.5rem, 8vw, 4.5rem);
+        font-style: italic;
+        font-weight: 400;
+        letter-spacing: -0.05em;
+        transition: opacity 0.45s ease;
+      }
+
+      html.app-ready #root {
+        opacity: 1;
+        transition: opacity 0.55s ease;
+      }
+
+      html.app-ready #boot-screen {
+        opacity: 0;
+        pointer-events: none;
+      }
+    </style>
   </head>
   <body>
+    <div id="boot-screen" aria-hidden="true">new²ords</div>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

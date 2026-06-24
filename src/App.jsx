@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Atmosphere from './components/Atmosphere'
 import CassettePlayer from './components/CassettePlayer'
+import EdgeNavigation from './components/EdgeNavigation'
 import LyricsGalaxy from './components/LyricsGalaxy'
+import ReadingLayer from './components/ReadingLayer'
 import Starfield from './components/Starfield'
 import { artist } from './data/artist'
 
@@ -13,6 +15,10 @@ const LEVEL = {
 
 export default function App() {
   const [level, setLevel] = useState(LEVEL.artist)
+  const [activeLayer, setActiveLayer] = useState(() => {
+    const hash = window.location.hash.slice(1)
+    return hash === 'notes' || hash === 'elsewhere' ? hash : null
+  })
   const [playback, setPlayback] = useState({
     time: 0,
     duration: 0,
@@ -30,8 +36,48 @@ export default function App() {
     setPlayback(sample)
   }, [])
 
+  const openLayer = useCallback((layer) => {
+    setActiveLayer(layer)
+    window.history.pushState(null, '', `#${layer}`)
+  }, [])
+
+  const closeLayer = useCallback(() => {
+    setActiveLayer(null)
+    window.history.pushState(null, '', window.location.pathname)
+  }, [])
+
+  const moveHorizontally = useCallback(
+    (direction) => {
+      if (activeLayer === 'notes') {
+        if (direction > 0) closeLayer()
+        return
+      }
+
+      if (activeLayer === 'elsewhere') {
+        if (direction < 0) closeLayer()
+        return
+      }
+
+      openLayer(direction < 0 ? 'notes' : 'elsewhere')
+    },
+    [activeLayer, closeLayer, openLayer],
+  )
+
   useEffect(() => {
     const onKeyDown = (event) => {
+      if (event.key === 'Escape' && activeLayer) {
+        closeLayer()
+        return
+      }
+      if (event.key === 'ArrowLeft') {
+        moveHorizontally(-1)
+        return
+      }
+      if (event.key === 'ArrowRight') {
+        moveHorizontally(1)
+        return
+      }
+      if (activeLayer) return
       if (event.key === 'Escape' && level > LEVEL.artist) goBack()
       if (event.key === 'ArrowUp') {
         setLevel((current) => Math.max(LEVEL.artist, current - 1))
@@ -41,6 +87,24 @@ export default function App() {
       }
     }
     const onWheel = (event) => {
+      const horizontalDelta =
+        Math.abs(event.deltaX) > Math.abs(event.deltaY)
+          ? event.deltaX
+          : event.shiftKey
+            ? event.deltaY
+            : 0
+
+      if (Math.abs(horizontalDelta) >= 20) {
+        if (wheelLockedRef.current) return
+        wheelLockedRef.current = true
+        moveHorizontally(horizontalDelta > 0 ? 1 : -1)
+        window.setTimeout(() => {
+          wheelLockedRef.current = false
+        }, 700)
+        return
+      }
+
+      if (activeLayer) return
       if (Math.abs(event.deltaY) < 20 || wheelLockedRef.current) return
 
       wheelLockedRef.current = true
@@ -59,7 +123,20 @@ export default function App() {
       window.removeEventListener('keydown', onKeyDown)
       window.removeEventListener('wheel', onWheel)
     }
-  }, [goBack, level])
+  }, [activeLayer, closeLayer, goBack, level, moveHorizontally])
+
+  useEffect(() => {
+    const onHashChange = () => {
+      const hash = window.location.hash.slice(1)
+      setActiveLayer(hash === 'notes' || hash === 'elsewhere' ? hash : null)
+    }
+    window.addEventListener('hashchange', onHashChange)
+    window.addEventListener('popstate', onHashChange)
+    return () => {
+      window.removeEventListener('hashchange', onHashChange)
+      window.removeEventListener('popstate', onHashChange)
+    }
+  }, [])
 
   const enterRelease = () => setLevel(LEVEL.release)
   const enterLyrics = () => setLevel(LEVEL.lyrics)
@@ -68,6 +145,7 @@ export default function App() {
     <main className={`experience level-${level}`}>
       <Starfield level={level} />
       <Atmosphere lyricsVisible={level === LEVEL.lyrics} />
+      <EdgeNavigation activeLayer={activeLayer} onOpen={openLayer} />
 
       <button
         className={`icon-button back-button ${level > LEVEL.artist ? 'is-visible' : ''}`}
@@ -85,7 +163,12 @@ export default function App() {
         aria-hidden={level !== LEVEL.artist}
       >
         <button className="title-button artist-name" onClick={enterRelease}>
-          new<sup>2</sup>ords
+          <span>
+            new<sup>2</sup>ords
+          </span>
+          <small className="title-invitation">
+            <span aria-hidden="true">—</span> enter <span aria-hidden="true">—</span>
+          </small>
         </button>
       </section>
 
@@ -118,6 +201,12 @@ export default function App() {
             ? 'click or scroll to listen'
             : 'scroll up or esc to return'}
       </p>
+
+      <ReadingLayer
+        layer={activeLayer}
+        onClose={closeLayer}
+        onNavigate={openLayer}
+      />
     </main>
   )
 }

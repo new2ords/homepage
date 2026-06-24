@@ -122,11 +122,6 @@ export default function LyricsGalaxy({
           {lyric.text}
         </span>
       ))}
-      {visible && !hasTimings && (
-        <p className="timing-notice">
-          Add lyric start times to enable synchronized highlighting
-        </p>
-      )}
     </div>
   )
 }

@@ -1,5 +1,10 @@
 export const artist = {
   name: 'new²ords',
+  links: {
+    bandcampMeteor:
+      'https://new2ords.bandcamp.com/track/meteor-6-6-26-wedding-version',
+    discord: 'https://discord.gg/6RXXz6hUKJ',
+  },
   release: {
     title: 'meteor',
     youtubeVideoId: '',
@@ -37,6 +42,13 @@ export const artist = {
     ],
   },
 }
+
+export const forthcomingPlatforms = [
+  { name: 'spotify' },
+  { name: 'apple music' },
+  { name: 'youtube' },
+  { name: 'github' },
+]
 
 artist.release.lyrics = artist.release.lyrics.map(([text, start]) => ({
   text,

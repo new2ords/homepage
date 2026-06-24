@@ -8,3 +8,10 @@ createRoot(document.getElementById('root')).render(
     <App />
   </StrictMode>,
 )
+
+window.requestAnimationFrame(() => {
+  window.requestAnimationFrame(() => {
+    document.documentElement.classList.add('app-ready')
+    window.setTimeout(() => document.getElementById('boot-screen')?.remove(), 600)
+  })
+})

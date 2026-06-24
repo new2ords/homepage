@@ -26,7 +26,10 @@ In the GitHub repository:
 1. Open **Settings → Pages**.
 2. Set **Source** to **GitHub Actions**.
 3. Add the custom domain under **Custom domain**.
-4. Create `public/CNAME` containing only that domain before deploying.
+
+Because deployment uses a custom GitHub Actions workflow, a committed `CNAME`
+file is not required. Configure the domain in **Settings → Pages** and at the
+domain's DNS provider.
 
 Artist and release content lives in `src/data/artist.js`.
 

@@ -98,21 +98,14 @@ export default function CassettePlayer({
     }
   }, [hasVideo, onPlaybackSample, videoId])
 
+  if (!hasVideo) return null
+
   return (
     <div className={`player-area ${visible ? 'is-visible' : ''}`}>
-      {hasVideo ? (
-        <>
-          <div className="youtube-frame" ref={mountRef} />
-          <p className="player-state" aria-live="polite">
-            {playerState === 'buffering' ? 'buffering — lyrics paused' : playerState}
-          </p>
-        </>
-      ) : (
-        <div className="player-placeholder">
-          <span>youtube player</span>
-          <strong>Add the video ID in src/data/artist.js</strong>
-        </div>
-      )}
+      <div className="youtube-frame" ref={mountRef} />
+      <p className="player-state" aria-live="polite">
+        {playerState === 'buffering' ? 'buffering' : playerState}
+      </p>
     </div>
   )
 }
