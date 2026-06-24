@@ -3,3 +3,7 @@ dist/
 .DS_Store
 *.local
 .env
+src/data/notes.generated.js
+public/notes/
+public/sitemap.xml
+public/robots.txt

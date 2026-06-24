@@ -7,6 +7,7 @@ import ReadingLayer from './components/ReadingLayer'
 import Starfield from './components/Starfield'
 import { artist } from './data/artist'
 import { getAnalyticsPath, trackPageView } from './lib/analytics'
+import { appUrlForRoute, parseReadingRoute } from './lib/routing'
 
 const LEVEL = {
   artist: 0,
@@ -16,10 +17,9 @@ const LEVEL = {
 
 export default function App() {
   const [level, setLevel] = useState(LEVEL.artist)
-  const [activeLayer, setActiveLayer] = useState(() => {
-    const hash = window.location.hash.slice(1)
-    return hash === 'notes' || hash === 'elsewhere' ? hash : null
-  })
+  const initialReadingRoute = parseReadingRoute()
+  const [activeLayer, setActiveLayer] = useState(initialReadingRoute.layer)
+  const [noteSlug, setNoteSlug] = useState(initialReadingRoute.noteSlug)
   const [playback, setPlayback] = useState({
     time: 0,
     duration: 0,
@@ -43,11 +43,37 @@ export default function App() {
 
   const openLayer = useCallback((layer) => {
     setActiveLayer(layer)
-    window.history.replaceState({ layer }, '', `#${layer}`)
+    setNoteSlug(null)
+    window.history.pushState(
+      { layer, noteSlug: null },
+      '',
+      appUrlForRoute(layer, null),
+    )
+  }, [])
+
+  const openNote = useCallback((slug) => {
+    setActiveLayer('notes')
+    setNoteSlug(slug)
+    window.history.pushState(
+      { layer: 'notes', noteSlug: slug },
+      '',
+      appUrlForRoute('notes', slug),
+    )
+  }, [])
+
+  const backToNotes = useCallback(() => {
+    setActiveLayer('notes')
+    setNoteSlug(null)
+    window.history.replaceState(
+      { layer: 'notes', noteSlug: null },
+      '',
+      appUrlForRoute('notes', null),
+    )
   }, [])
 
   const closeLayer = useCallback(() => {
     setActiveLayer(null)
+    setNoteSlug(null)
     window.history.replaceState(null, '', window.location.pathname)
   }, [])
 
@@ -78,7 +104,8 @@ export default function App() {
   useEffect(() => {
     const onKeyDown = (event) => {
       if (event.key === 'Escape' && activeLayer) {
-        closeLayer()
+        if (noteSlug) backToNotes()
+        else closeLayer()
         return
       }
       if (event.key === 'ArrowLeft') {
@@ -130,7 +157,16 @@ export default function App() {
       window.removeEventListener('keydown', onKeyDown)
       window.removeEventListener('wheel', onWheel)
     }
-  }, [activeLayer, closeLayer, goBack, level, lockInput, moveHorizontally])
+  }, [
+    activeLayer,
+    backToNotes,
+    closeLayer,
+    goBack,
+    level,
+    lockInput,
+    moveHorizontally,
+    noteSlug,
+  ])
 
   useEffect(() => {
     const onTouchStart = (event) => {
@@ -229,26 +265,20 @@ export default function App() {
   }, [lockInput])
 
   useEffect(() => {
-    const hash = window.location.hash.slice(1)
-    if (hash === 'notes' || hash === 'elsewhere') {
-      window.history.replaceState({ layer: hash }, '', `#${hash}`)
-    }
-  }, [])
+    trackPageView(getAnalyticsPath(level, activeLayer, noteSlug))
+  }, [level, activeLayer, noteSlug])
 
   useEffect(() => {
-    trackPageView(getAnalyticsPath(level, activeLayer))
-  }, [level, activeLayer])
-
-  useEffect(() => {
-    const onHashChange = () => {
-      const hash = window.location.hash.slice(1)
-      setActiveLayer(hash === 'notes' || hash === 'elsewhere' ? hash : null)
+    const syncReadingRoute = () => {
+      const route = parseReadingRoute()
+      setActiveLayer(route.layer)
+      setNoteSlug(route.noteSlug)
     }
-    window.addEventListener('hashchange', onHashChange)
-    window.addEventListener('popstate', onHashChange)
+    window.addEventListener('hashchange', syncReadingRoute)
+    window.addEventListener('popstate', syncReadingRoute)
     return () => {
-      window.removeEventListener('hashchange', onHashChange)
-      window.removeEventListener('popstate', onHashChange)
+      window.removeEventListener('hashchange', syncReadingRoute)
+      window.removeEventListener('popstate', syncReadingRoute)
     }
   }, [])
 
@@ -281,6 +311,15 @@ export default function App() {
         aria-hidden={level !== LEVEL.artist}
       >
         <button className="title-button artist-name" onClick={enterRelease}>
+          <span className="meteor-scroll-cue" aria-hidden="true">
+            <span className="meteor-scroll-line" />
+            <span className="meteor-scroll-head" />
+            <span className="meteor-scroll-direction">
+              <i />
+              <i />
+              <i />
+            </span>
+          </span>
           <span>
             new<sup>2</sup><span className="artist-name-ords">ords</span>
           </span>
@@ -295,6 +334,15 @@ export default function App() {
         aria-hidden={level !== LEVEL.release}
       >
         <button className="title-button song-name" onClick={enterLyrics}>
+          <span className="meteor-scroll-cue" aria-hidden="true">
+            <span className="meteor-scroll-line" />
+            <span className="meteor-scroll-head" />
+            <span className="meteor-scroll-direction">
+              <i />
+              <i />
+              <i />
+            </span>
+          </span>
           <span>{artist.release.title}</span>
           <small className="title-invitation">
             <span aria-hidden="true">—</span> listen <span aria-hidden="true">—</span>
@@ -320,8 +368,11 @@ export default function App() {
 
       <ReadingLayer
         layer={activeLayer}
+        noteSlug={noteSlug}
         onClose={closeLayer}
         onNavigate={openLayer}
+        onOpenNote={openNote}
+        onBackToNotes={backToNotes}
       />
     </main>
   )

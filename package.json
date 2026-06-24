@@ -4,8 +4,9 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
+    "predev": "node scripts/build-notes.mjs",
     "dev": "vite",
-    "build": "vite build",
+    "build": "node scripts/build-notes.mjs --static && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -16,6 +17,8 @@
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.5.2",
+    "gray-matter": "^4.0.3",
+    "marked": "^15.0.12",
     "vite": "^6.3.5"
   }
 }

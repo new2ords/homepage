@@ -10,12 +10,21 @@ const PAGE_TITLES = {
 
 let enabled = false
 
-export function getAnalyticsPath(level, activeLayer) {
+export function getAnalyticsPath(level, activeLayer, noteSlug) {
+  if (activeLayer === 'notes' && noteSlug) return `/notes/${noteSlug}`
   if (activeLayer === 'notes') return '/notes'
   if (activeLayer === 'elsewhere') return '/elsewhere'
   if (level === 2) return '/lyrics'
   if (level === 1) return '/release'
   return '/'
+}
+
+function getPageTitle(path) {
+  if (PAGE_TITLES[path]) return PAGE_TITLES[path]
+  if (path.startsWith('/notes/')) {
+    return `new²ords — ${path.slice('/notes/'.length).replace(/-/g, ' ')}`
+  }
+  return 'new²ords'
 }
 
 export function initAnalytics() {
@@ -45,7 +54,7 @@ export function trackPageView(path) {
 
   window.gtag('event', 'page_view', {
     page_path: path,
-    page_title: PAGE_TITLES[path] || 'new²ords',
+    page_title: getPageTitle(path),
     page_location: `${window.location.origin}${path}`,
   })
 }
