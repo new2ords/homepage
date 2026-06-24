@@ -6,6 +6,7 @@ import LyricsGalaxy from './components/LyricsGalaxy'
 import ReadingLayer from './components/ReadingLayer'
 import Starfield from './components/Starfield'
 import { artist } from './data/artist'
+import { getAnalyticsPath, trackPageView } from './lib/analytics'
 
 const LEVEL = {
   artist: 0,
@@ -233,6 +234,10 @@ export default function App() {
       window.history.replaceState({ layer: hash }, '', `#${hash}`)
     }
   }, [])
+
+  useEffect(() => {
+    trackPageView(getAnalyticsPath(level, activeLayer))
+  }, [level, activeLayer])
 
   useEffect(() => {
     const onHashChange = () => {

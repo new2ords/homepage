@@ -33,6 +33,27 @@ domain's DNS provider.
 
 Artist and release content lives in `src/data/artist.js`.
 
+## Google Analytics (GA4)
+
+1. Create a free [Google Analytics](https://analytics.google.com/) account and add a **Web** data stream for your domain.
+2. Copy the **Measurement ID** (`G-XXXXXXXXXX`).
+3. In GitHub, open **Settings → Secrets and variables → Actions** and add:
+   - Name: `VITE_GA_MEASUREMENT_ID`
+   - Value: your Measurement ID
+4. Push to `main` — the deploy workflow injects it at build time.
+
+Analytics is disabled during local `npm run dev`. To test locally, copy `.env.example` to `.env.local`, set your ID, and run `npm run build && npm run preview`.
+
+Virtual page paths tracked in reports:
+
+| View | Path |
+|------|------|
+| Home (artist) | `/` |
+| Release | `/release` |
+| Lyrics | `/lyrics` |
+| Notes | `/notes` |
+| Elsewhere | `/elsewhere` |
+
 ## YouTube and lyric synchronization
 
 Set `youtubeVideoId` in `src/data/artist.js`, then replace each lyric's `null`

@@ -1,8 +1,10 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App'
+import { initAnalytics } from './lib/analytics'
 import './styles.css'
 
+initAnalytics()
 const root = createRoot(document.getElementById('root'))
 
 if (import.meta.env.DEV && window.location.search === '?timing') {
