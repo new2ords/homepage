@@ -4,7 +4,7 @@ export const artist = {
     bandcampMeteor:
       'https://new2ords.bandcamp.com/track/meteor-6-6-26-wedding-version',
     spotifyMeteor: '',
-    instagram: '',
+    instagram: 'https://www.instagram.com/new2ords/',
     discord: 'https://discord.gg/6RXXz6hUKJ',
     email: 'hello@new2ords.com',
   },

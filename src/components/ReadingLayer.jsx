@@ -98,6 +98,13 @@ function Elsewhere() {
       </header>
 
       <div className="available-links">
+        <a href={`mailto:${artist.links.email}`}>
+          <span>
+            <strong>write to me</strong>
+            <small>{artist.links.email}</small>
+          </span>
+          <ExternalArrow />
+        </a>
         <a href={artist.links.bandcampMeteor} target="_blank" rel="noreferrer">
           <span>
             <strong>new²ords music & merch</strong>
@@ -115,7 +122,7 @@ function Elsewhere() {
         {artist.links.instagram ? (
           <a href={artist.links.instagram} target="_blank" rel="noreferrer">
             <span>
-              <strong>new²ords on instagram</strong>
+              <strong>new²ords art</strong>
               <small>instagram</small>
             </span>
             <ExternalArrow />
@@ -129,13 +136,6 @@ function Elsewhere() {
             <ExternalArrow />
           </div>
         )}
-        <a href={`mailto:${artist.links.email}`}>
-          <span>
-            <strong>write to me</strong>
-            <small>{artist.links.email}</small>
-          </span>
-          <ExternalArrow />
-        </a>
       </div>
 
       <div className="forthcoming-links">
