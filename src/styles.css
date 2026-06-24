@@ -248,9 +248,18 @@ button:focus-visible {
 }
 
 .song-name {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
   font-size: clamp(3.3rem, 8vw, 5rem);
   font-style: italic;
   letter-spacing: -0.04em;
+}
+
+.song-name:hover .title-invitation,
+.song-name:focus-visible .title-invitation {
+  gap: 13px;
+  color: var(--accent);
 }
 
 .icon-button {
@@ -414,24 +423,6 @@ button:focus-visible {
   letter-spacing: 0.1em;
   text-align: center;
   text-transform: uppercase;
-}
-
-.navigation-hint {
-  position: fixed;
-  z-index: 12;
-  right: max(24px, env(safe-area-inset-right));
-  bottom: max(24px, env(safe-area-inset-bottom));
-  margin: 0;
-  color: rgba(243, 244, 246, 0.18);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 8px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  transition: opacity 0.8s ease;
-}
-
-.level-2 .navigation-hint {
-  opacity: 0;
 }
 
 .edge-navigation {
@@ -917,11 +908,6 @@ button:focus-visible {
     font-size: 0.85rem !important;
   }
 
-  .navigation-hint {
-    right: 18px;
-    bottom: 18px;
-  }
-
   .edge-link {
     top: auto;
     bottom: max(14px, env(safe-area-inset-bottom));
@@ -937,10 +923,6 @@ button:focus-visible {
   }
 
   .edge-link small {
-    display: none;
-  }
-
-  .navigation-hint {
     display: none;
   }
 

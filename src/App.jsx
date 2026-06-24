@@ -177,7 +177,10 @@ export default function App() {
         aria-hidden={level !== LEVEL.release}
       >
         <button className="title-button song-name" onClick={enterLyrics}>
-          {artist.release.title}
+          <span>{artist.release.title}</span>
+          <small className="title-invitation">
+            <span aria-hidden="true">—</span> listen <span aria-hidden="true">—</span>
+          </small>
         </button>
       </section>
 
@@ -193,14 +196,6 @@ export default function App() {
         visible={level === LEVEL.lyrics}
         onPlaybackSample={updatePlayback}
       />
-
-      <p className="navigation-hint" aria-hidden="true">
-        {level === LEVEL.artist
-          ? 'click or scroll to enter'
-          : level === LEVEL.release
-            ? 'click or scroll to listen'
-            : 'scroll up or esc to return'}
-      </p>
 
       <ReadingLayer
         layer={activeLayer}
