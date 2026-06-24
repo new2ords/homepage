@@ -143,18 +143,21 @@ export default function App() {
       }
 
       const touch = event.touches[0]
-      const ignoreHorizontalSwipe = Boolean(
+      const startedOnNav = Boolean(
         touch.target instanceof Element &&
-          touch.target.closest(
-            '.reading-layer.is-active, .reading-navigation, .reading-desktop-return',
-          ),
+          touch.target.closest('.reading-navigation, .reading-desktop-return'),
+      )
+      const startedOnReadingLayer = Boolean(
+        touch.target instanceof Element &&
+          touch.target.closest('.reading-layer.is-active'),
       )
 
       touchStartRef.current = {
         x: touch.clientX,
         y: touch.clientY,
         startedAt: performance.now(),
-        ignoreHorizontalSwipe,
+        startedOnNav,
+        startedOnReadingLayer,
       }
     }
 
@@ -178,7 +181,16 @@ export default function App() {
       const horizontal = Math.abs(deltaX) > Math.abs(deltaY) * 1.2
       const vertical = Math.abs(deltaY) > Math.abs(deltaX) * 1.2
       if (!horizontal && !vertical) return
-      if (horizontal && start.ignoreHorizontalSwipe) return
+      if (horizontal && start.startedOnNav) return
+
+      if (horizontal && start.startedOnReadingLayer) {
+        const direction = deltaX < 0 ? 1 : -1
+        const isBackSwipe =
+          (activeLayer === 'notes' && direction > 0) ||
+          (activeLayer === 'elsewhere' && direction < 0)
+        if (!isBackSwipe) return
+        if (Math.abs(deltaX) < Math.abs(deltaY) * 1.8) return
+      }
 
       if (horizontal) {
         if (moveHorizontally(deltaX < 0 ? 1 : -1)) {
