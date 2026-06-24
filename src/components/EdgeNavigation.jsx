@@ -1,5 +1,5 @@
-export default function EdgeNavigation({ activeLayer, onOpen }) {
-  const hidden = activeLayer !== null
+export default function EdgeNavigation({ visible, activeLayer, onOpen }) {
+  const hidden = !visible || activeLayer !== null
 
   return (
     <nav

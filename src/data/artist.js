@@ -3,10 +3,14 @@ export const artist = {
   links: {
     bandcampMeteor:
       'https://new2ords.bandcamp.com/track/meteor-6-6-26-wedding-version',
+    spotifyMeteor: '',
+    instagram: '',
     discord: 'https://discord.gg/6RXXz6hUKJ',
+    email: 'hello@new2ords.com',
   },
   release: {
     title: 'meteor',
+    bandcampTrackId: '1562974215',
     youtubeVideoId: '',
     // Adjust once during authoring if every lyric feels consistently early/late.
     lyricOffsetMs: 0,
@@ -47,7 +51,6 @@ export const forthcomingPlatforms = [
   { name: 'spotify' },
   { name: 'apple music' },
   { name: 'youtube' },
-  { name: 'github' },
 ]
 
 artist.release.lyrics = artist.release.lyrics.map(([text, start]) => ({

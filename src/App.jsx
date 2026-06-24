@@ -27,6 +27,7 @@ export default function App() {
     buffering: false,
   })
   const wheelLockedRef = useRef(false)
+  const touchStartRef = useRef(null)
 
   const goBack = useCallback(() => {
     setLevel((current) => Math.max(LEVEL.artist, current - 1))
@@ -126,6 +127,64 @@ export default function App() {
   }, [activeLayer, closeLayer, goBack, level, moveHorizontally])
 
   useEffect(() => {
+    const onTouchStart = (event) => {
+      if (event.touches.length !== 1) {
+        touchStartRef.current = null
+        return
+      }
+
+      const touch = event.touches[0]
+      touchStartRef.current = {
+        x: touch.clientX,
+        y: touch.clientY,
+        startedAt: performance.now(),
+      }
+    }
+
+    const onTouchEnd = (event) => {
+      const start = touchStartRef.current
+      touchStartRef.current = null
+      if (!start || event.changedTouches.length !== 1) return
+
+      const touch = event.changedTouches[0]
+      const deltaX = touch.clientX - start.x
+      const deltaY = touch.clientY - start.y
+      const distance = Math.hypot(deltaX, deltaY)
+      const elapsed = performance.now() - start.startedAt
+
+      if (distance < 55 || elapsed > 900 || wheelLockedRef.current) return
+
+      const horizontal = Math.abs(deltaX) > Math.abs(deltaY) * 1.2
+      const vertical = Math.abs(deltaY) > Math.abs(deltaX) * 1.2
+      if (!horizontal && !vertical) return
+
+      wheelLockedRef.current = true
+      if (horizontal) {
+        moveHorizontally(deltaX < 0 ? 1 : -1)
+      } else if (!activeLayer && vertical) {
+        setLevel((current) => {
+          const direction = deltaY < 0 ? 1 : -1
+          return Math.max(
+            LEVEL.artist,
+            Math.min(LEVEL.lyrics, current + direction),
+          )
+        })
+      }
+
+      window.setTimeout(() => {
+        wheelLockedRef.current = false
+      }, 700)
+    }
+
+    window.addEventListener('touchstart', onTouchStart, { passive: true })
+    window.addEventListener('touchend', onTouchEnd, { passive: true })
+    return () => {
+      window.removeEventListener('touchstart', onTouchStart)
+      window.removeEventListener('touchend', onTouchEnd)
+    }
+  }, [activeLayer, moveHorizontally])
+
+  useEffect(() => {
     const onHashChange = () => {
       const hash = window.location.hash.slice(1)
       setActiveLayer(hash === 'notes' || hash === 'elsewhere' ? hash : null)
@@ -145,7 +204,11 @@ export default function App() {
     <main className={`experience level-${level}`}>
       <Starfield level={level} />
       <Atmosphere lyricsVisible={level === LEVEL.lyrics} />
-      <EdgeNavigation activeLayer={activeLayer} onOpen={openLayer} />
+      <EdgeNavigation
+        visible={level === LEVEL.artist}
+        activeLayer={activeLayer}
+        onOpen={openLayer}
+      />
 
       <button
         className={`icon-button back-button ${level > LEVEL.artist ? 'is-visible' : ''}`}
@@ -164,7 +227,7 @@ export default function App() {
       >
         <button className="title-button artist-name" onClick={enterRelease}>
           <span>
-            new<sup>2</sup>ords
+            new<sup>2</sup><span className="artist-name-ords">ords</span>
           </span>
           <small className="title-invitation">
             <span aria-hidden="true">—</span> enter <span aria-hidden="true">—</span>
@@ -178,7 +241,7 @@ export default function App() {
       >
         <button className="title-button song-name" onClick={enterLyrics}>
           <span>{artist.release.title}</span>
-          <small className="title-invitation">
+          <small className="title-invitation song-listen-link">
             <span aria-hidden="true">—</span> listen <span aria-hidden="true">—</span>
           </small>
         </button>
@@ -192,8 +255,11 @@ export default function App() {
       />
 
       <CassettePlayer
+        bandcampTrackId={artist.release.bandcampTrackId}
+        bandcampUrl={artist.links.bandcampMeteor}
         videoId={artist.release.youtubeVideoId}
         visible={level === LEVEL.lyrics}
+        playback={playback}
         onPlaybackSample={updatePlayback}
       />
 

@@ -1,37 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { mulberry32 } from '../lib/random'
 
-function findActiveLyric(lyrics, time) {
-  let low = 0
-  let high = lyrics.length - 1
-  let result = -1
-
-  while (low <= high) {
-    const middle = Math.floor((low + high) / 2)
-    const start = lyrics[middle].start
-
-    if (start === null || start > time) {
-      high = middle - 1
-    } else {
-      result = middle
-      low = middle + 1
-    }
-  }
-
-  return result
-}
-
 export default function LyricsGalaxy({
   lyrics,
   visible,
-  playback,
-  offsetSeconds,
 }) {
   const [activeIndex, setActiveIndex] = useState(-1)
   const [line, setLine] = useState(null)
   const wordRefs = useRef([])
   const activeIndexRef = useRef(-1)
-  const hasTimings = lyrics.some((lyric) => lyric.start !== null)
+  const timerRef = useRef(null)
+  const randomRef = useRef(mulberry32(20260623))
+  const hasLyrics = lyrics.length > 0
 
   const positions = useMemo(() => {
     const random = mulberry32(777)
@@ -55,20 +35,17 @@ export default function LyricsGalaxy({
       activeIndexRef.current = -1
       setActiveIndex(-1)
       setLine(null)
+      window.clearTimeout(timerRef.current)
     }
   }, [visible])
 
   useEffect(() => {
-    if (!visible || !hasTimings) return undefined
-    let frameId
+    if (!visible || !hasLyrics) return undefined
 
-    const render = () => {
-      const elapsed = playback.playing
-        ? (performance.now() - playback.sampledAt) / 1000
-        : 0
-      const estimatedTime = playback.time + elapsed + offsetSeconds
-      const nextIndex = findActiveLyric(lyrics, estimatedTime)
+    const animate = () => {
+      if (!lyrics.length) return
 
+      const nextIndex = pickNextIndex(lyrics.length)
       if (nextIndex !== activeIndexRef.current) {
         const previousIndex = activeIndexRef.current
         activeIndexRef.current = nextIndex
@@ -88,12 +65,13 @@ export default function LyricsGalaxy({
         }
       }
 
-      frameId = window.requestAnimationFrame(render)
+      const nextDelay = 700 + randomRef.current() * 1100
+      timerRef.current = window.setTimeout(animate, nextDelay)
     }
 
-    render()
-    return () => window.cancelAnimationFrame(frameId)
-  }, [hasTimings, lyrics, offsetSeconds, playback, visible])
+    animate()
+    return () => window.clearTimeout(timerRef.current)
+  }, [hasLyrics, lyrics, visible])
 
   return (
     <div
@@ -124,4 +102,9 @@ export default function LyricsGalaxy({
       ))}
     </div>
   )
+}
+
+function pickNextIndex(length) {
+  if (length <= 1) return 0
+  return Math.floor(Math.random() * length)
 }

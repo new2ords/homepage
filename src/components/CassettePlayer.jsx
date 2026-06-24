@@ -24,6 +24,8 @@ function loadYouTubeApi() {
 }
 
 export default function CassettePlayer({
+  bandcampTrackId,
+  bandcampUrl,
   videoId,
   visible,
   onPlaybackSample,
@@ -32,7 +34,9 @@ export default function CassettePlayer({
   const playerRef = useRef(null)
   const stateRef = useRef(-1)
   const [playerState, setPlayerState] = useState('unstarted')
+
   const hasVideo = Boolean(videoId)
+  const hasBandcamp = Boolean(bandcampTrackId)
 
   useEffect(() => {
     if (!hasVideo) return undefined
@@ -98,14 +102,33 @@ export default function CassettePlayer({
     }
   }, [hasVideo, onPlaybackSample, videoId])
 
-  if (!hasVideo) return null
+  if (!hasVideo && !hasBandcamp) return null
 
   return (
     <div className={`player-area ${visible ? 'is-visible' : ''}`}>
-      <div className="youtube-frame" ref={mountRef} />
-      <p className="player-state" aria-live="polite">
-        {playerState === 'buffering' ? 'buffering' : playerState}
-      </p>
+      {hasVideo ? (
+        <>
+          <div className="youtube-frame" ref={mountRef} />
+          <p className="player-state" aria-live="polite">
+            {playerState === 'buffering' ? 'buffering' : playerState}
+          </p>
+        </>
+      ) : (
+        <div className="bandcamp-shell">
+          <div className="bandcamp-meta">
+            <span>bandcamp</span>
+            <a href={bandcampUrl} target="_blank" rel="noreferrer">
+              open the track
+            </a>
+          </div>
+          <iframe
+            className="bandcamp-frame"
+            title="Listen to meteor on Bandcamp"
+            src={`https://bandcamp.com/EmbeddedPlayer/track=${bandcampTrackId}/size=small/bgcol=020408/linkcol=93c5fd/transparent=true/`}
+            seamless
+          />
+        </div>
+      )}
     </div>
   )
 }
