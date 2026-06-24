@@ -35,6 +35,11 @@ export default function App() {
   const wheelLockedRef = useRef(false)
   const inputLockTimeoutRef = useRef(null)
   const touchStartRef = useRef(null)
+<<<<<<< Updated upstream
+=======
+  const suppressClickUntilRef = useRef(0)
+  const activeLayerRef = useRef(activeLayer)
+>>>>>>> Stashed changes
   const closeLayerRef = useRef(() => {})
   const moveHorizontallyRef = useRef(() => false)
 
@@ -157,18 +162,16 @@ export default function App() {
       }
 
       const touch = event.touches[0]
-      const startedOnGestureControl = Boolean(
+      const startedOnNav = Boolean(
         touch.target instanceof Element &&
-          touch.target.closest(
-            'a, iframe, input, select, textarea, .reading-navigation, .reading-desktop-return',
-          ),
+          touch.target.closest('.reading-navigation, .reading-desktop-return'),
       )
 
       touchStartRef.current = {
         x: touch.clientX,
         y: touch.clientY,
         startedAt: performance.now(),
-        startedOnGestureControl,
+        startedOnNav,
         wasScrolling: false,
       }
     }
@@ -176,7 +179,6 @@ export default function App() {
     const onTouchMove = (event) => {
       const start = touchStartRef.current
       if (!start || start.wasScrolling || event.touches.length !== 1) return
-      if (start.startedOnGestureControl) return
 
       const touch = event.touches[0]
       const deltaY = touch.clientY - start.y
@@ -184,15 +186,6 @@ export default function App() {
 
       if (Math.abs(deltaY) > 10 && Math.abs(deltaY) > Math.abs(deltaX)) {
         start.wasScrolling = true
-        return
-      }
-
-      if (
-        Math.abs(deltaX) > 10 &&
-        Math.abs(deltaX) > Math.abs(deltaY) * 1.1 &&
-        event.cancelable
-      ) {
-        event.preventDefault()
       }
     }
 
@@ -200,11 +193,15 @@ export default function App() {
       touchStartRef.current = null
     }
 
+    const suppressGhostClick = () => {
+      suppressClickUntilRef.current = performance.now() + 500
+    }
+
     const onTouchEnd = (event) => {
       const start = touchStartRef.current
       touchStartRef.current = null
       if (!start || event.changedTouches.length !== 1) return
-      if (start.startedOnGestureControl || wheelLockedRef.current) return
+      if (start.startedOnNav || wheelLockedRef.current) return
 
       const touch = event.changedTouches[0]
       const deltaX = touch.clientX - start.x
@@ -219,7 +216,7 @@ export default function App() {
       const vertical = Math.abs(deltaY) > Math.abs(deltaX) * 1.1
 
       if (layer && horizontal && !start.wasScrolling) {
-        if (event.cancelable) event.preventDefault()
+        suppressGhostClick()
         closeLayerRef.current()
         lockInput(700)
         return
@@ -228,7 +225,7 @@ export default function App() {
       if (!horizontal && !vertical) return
 
       if (horizontal) {
-        if (event.cancelable) event.preventDefault()
+        suppressGhostClick()
         if (moveHorizontallyRef.current(deltaX < 0 ? 1 : -1)) {
           lockInput(700)
         }
@@ -236,7 +233,7 @@ export default function App() {
       }
 
       if (!layer && vertical) {
-        if (event.cancelable) event.preventDefault()
+        suppressGhostClick()
         lockInput(700)
         setLevel((current) => {
           const direction = deltaY < 0 ? 1 : -1
@@ -248,15 +245,23 @@ export default function App() {
       }
     }
 
+    const onClick = (event) => {
+      if (performance.now() >= suppressClickUntilRef.current) return
+      event.preventDefault()
+      event.stopPropagation()
+    }
+
     window.addEventListener('touchstart', onTouchStart, { passive: true })
-    window.addEventListener('touchmove', onTouchMove, { passive: false })
-    window.addEventListener('touchend', onTouchEnd, { passive: false })
+    window.addEventListener('touchmove', onTouchMove, { passive: true })
+    window.addEventListener('touchend', onTouchEnd, { passive: true })
     window.addEventListener('touchcancel', onTouchCancel, { passive: true })
+    window.addEventListener('click', onClick, true)
     return () => {
       window.removeEventListener('touchstart', onTouchStart)
       window.removeEventListener('touchmove', onTouchMove)
       window.removeEventListener('touchend', onTouchEnd)
       window.removeEventListener('touchcancel', onTouchCancel)
+      window.removeEventListener('click', onClick, true)
     }
   }, [lockInput])
 

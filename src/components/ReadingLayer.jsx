@@ -3,14 +3,6 @@ import { artist } from '../data/artist'
 import { getNote, notes } from '../lib/notes'
 import { notePath } from '../lib/routing'
 
-const FOCUSABLE_SELECTOR =
-  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex=\"-1\"])'
-
-function focusReadingLayer(layerElement) {
-  const firstFocusable = layerElement.querySelector(FOCUSABLE_SELECTOR)
-  ;(firstFocusable ?? layerElement).focus({ preventScroll: true })
-}
-
 export default function ReadingLayer({
   layer,
   noteSlug,
@@ -35,7 +27,7 @@ export default function ReadingLayer({
     if (!activeLayer) return undefined
 
     const frame = window.requestAnimationFrame(() => {
-      focusReadingLayer(activeLayer)
+      activeLayer.focus({ preventScroll: true })
     })
     return () => window.cancelAnimationFrame(frame)
   }, [layer, noteSlug])
@@ -52,7 +44,7 @@ export default function ReadingLayer({
         aria-hidden={layer !== 'notes'}
         aria-labelledby={noteSlug ? 'note-heading' : 'notes-heading'}
         inert={layer === 'notes' ? undefined : ''}
-        tabIndex={layer === 'notes' ? undefined : -1}
+        tabIndex={-1}
       >
         <Notes
           noteSlug={noteSlug}
@@ -71,7 +63,7 @@ export default function ReadingLayer({
         aria-hidden={layer !== 'elsewhere'}
         aria-labelledby="elsewhere-heading"
         inert={layer === 'elsewhere' ? undefined : ''}
-        tabIndex={layer === 'elsewhere' ? undefined : -1}
+        tabIndex={-1}
       >
         <Elsewhere />
       </section>

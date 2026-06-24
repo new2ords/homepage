@@ -706,6 +706,7 @@ button:focus-visible {
     linear-gradient(#020408, #020408),
     radial-gradient(circle at 50% 20%, rgba(147, 197, 253, 0.08), transparent 42%);
   overscroll-behavior: contain;
+  outline: none;
   -webkit-overflow-scrolling: touch;
   transition:
     transform 0.95s var(--ease-expo),
@@ -800,8 +801,13 @@ button:focus-visible {
   color: var(--text);
 }
 
+.reading-navigation button:focus-visible {
+  outline: none;
+  text-shadow: 0 0 14px rgba(147, 197, 253, 0.45);
+}
+
 .reading-navigation button:disabled {
-  color: rgba(243, 244, 246, 0.92);
+  color: rgba(243, 244, 246, 0.72);
   cursor: default;
 }
 
@@ -830,6 +836,14 @@ button:focus-visible {
   transition:
     color 0.3s ease,
     transform 0.6s var(--ease-expo);
+}
+
+.reading-layer a:focus-visible,
+.reading-layer button:focus-visible,
+.reading-desktop-return:focus-visible {
+  outline: none;
+  color: var(--accent);
+  text-shadow: 0 0 14px rgba(147, 197, 253, 0.4);
 }
 
 .reading-desktop-return-label {
