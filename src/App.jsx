@@ -35,6 +35,7 @@ export default function App() {
   const wheelLockedRef = useRef(false)
   const inputLockTimeoutRef = useRef(null)
   const touchStartRef = useRef(null)
+  const activeLayerRef = useRef(activeLayer)
   const closeLayerRef = useRef(() => {})
   const moveHorizontallyRef = useRef(() => false)
 
@@ -59,6 +60,7 @@ export default function App() {
     [activeLayer, closeLayer, openLayer],
   )
 
+  activeLayerRef.current = activeLayer
   closeLayerRef.current = closeLayer
   moveHorizontallyRef.current = moveHorizontally
 
@@ -157,10 +159,10 @@ export default function App() {
       }
 
       const touch = event.touches[0]
-      const startedOnInteractiveElement = Boolean(
+      const startedOnGestureControl = Boolean(
         touch.target instanceof Element &&
           touch.target.closest(
-            'a, button, iframe, input, select, textarea, [role="button"]',
+            'a, iframe, input, select, textarea, .reading-navigation, .reading-desktop-return',
           ),
       )
 
@@ -168,7 +170,7 @@ export default function App() {
         x: touch.clientX,
         y: touch.clientY,
         startedAt: performance.now(),
-        startedOnInteractiveElement,
+        startedOnGestureControl,
         wasScrolling: false,
       }
     }
@@ -176,6 +178,7 @@ export default function App() {
     const onTouchMove = (event) => {
       const start = touchStartRef.current
       if (!start || start.wasScrolling || event.touches.length !== 1) return
+      if (start.startedOnGestureControl) return
 
       const touch = event.touches[0]
       const deltaY = touch.clientY - start.y
@@ -183,6 +186,15 @@ export default function App() {
 
       if (Math.abs(deltaY) > 10 && Math.abs(deltaY) > Math.abs(deltaX)) {
         start.wasScrolling = true
+        return
+      }
+
+      if (
+        Math.abs(deltaX) > 10 &&
+        Math.abs(deltaX) > Math.abs(deltaY) * 1.1 &&
+        event.cancelable
+      ) {
+        event.preventDefault()
       }
     }
 
@@ -194,7 +206,7 @@ export default function App() {
       const start = touchStartRef.current
       touchStartRef.current = null
       if (!start || event.changedTouches.length !== 1) return
-      if (start.startedOnInteractiveElement || wheelLockedRef.current) return
+      if (start.startedOnGestureControl || wheelLockedRef.current) return
 
       const touch = event.changedTouches[0]
       const deltaX = touch.clientX - start.x
@@ -239,7 +251,7 @@ export default function App() {
     }
 
     window.addEventListener('touchstart', onTouchStart, { passive: true })
-    window.addEventListener('touchmove', onTouchMove, { passive: true })
+    window.addEventListener('touchmove', onTouchMove, { passive: false })
     window.addEventListener('touchend', onTouchEnd, { passive: false })
     window.addEventListener('touchcancel', onTouchCancel, { passive: true })
     return () => {
