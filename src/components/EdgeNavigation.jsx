@@ -19,8 +19,8 @@ export default function EdgeNavigation({ visible, activeLayer, onOpen }) {
         type="button"
         onClick={() => onOpen('elsewhere')}
       >
-        <span>elsewhere</span>
-        <small>find me</small>
+        <span>find me</span>
+        <small>elsewhere</small>
       </button>
     </nav>
   )
