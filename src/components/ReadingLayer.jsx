@@ -1,8 +1,5 @@
 import { useEffect, useRef } from 'react'
-import {
-  artist,
-  forthcomingPlatforms,
-} from '../data/artist'
+import { artist } from '../data/artist'
 import { getNote, notes } from '../lib/notes'
 import { notePath } from '../lib/routing'
 
@@ -224,14 +221,32 @@ function Elsewhere() {
         </a>
         <a href={artist.links.bandcampMeteor} target="_blank" rel="noreferrer">
           <span>
-            <strong>music & merch</strong>
+            <strong>listen to meteor</strong>
             <small>bandcamp</small>
           </span>
           <ExternalArrow />
         </a>
+        {artist.links.spotifyMeteor ? (
+          <a href={artist.links.spotifyMeteor} target="_blank" rel="noreferrer">
+            <span>
+              <strong>listen wherever you do</strong>
+              <small>spotify</small>
+            </span>
+            <ExternalArrow />
+          </a>
+        ) : null}
+        {artist.links.youtube ? (
+          <a href={artist.links.youtube} target="_blank" rel="noreferrer">
+            <span>
+              <strong>from the room</strong>
+              <small>youtube</small>
+            </span>
+            <ExternalArrow />
+          </a>
+        ) : null}
         <a href={artist.links.discord} target="_blank" rel="noreferrer">
           <span>
-            <strong>book club</strong>
+            <strong>join the book club</strong>
             <small>discord</small>
           </span>
           <ExternalArrow />
@@ -239,30 +254,35 @@ function Elsewhere() {
         {artist.links.instagram ? (
           <a href={artist.links.instagram} target="_blank" rel="noreferrer">
             <span>
-              <strong>instagram</strong>
+              <strong>along the way</strong>
+              <small>instagram</small>
             </span>
             <ExternalArrow />
           </a>
         ) : (
-          <div className="available-link available-link-soon" aria-hidden="true">
+          <div className="available-link available-link-soon">
             <span>
-              <strong>instagram</strong>
+              <strong>along the way</strong>
               <small>soon</small>
             </span>
-            <ExternalArrow />
           </div>
         )}
-      </div>
-
-      <div className="forthcoming-links">
-        <ul>
-          {forthcomingPlatforms.map((platform) => (
-            <li key={platform.name}>
-              <span>{platform.name}</span>
+        {!artist.links.spotifyMeteor ? (
+          <div className="available-link available-link-soon">
+            <span>
+              <strong>listen wherever you do</strong>
               <small>soon</small>
-            </li>
-          ))}
-        </ul>
+            </span>
+          </div>
+        ) : null}
+        {!artist.links.youtube ? (
+          <div className="available-link available-link-soon">
+            <span>
+              <strong>from the room</strong>
+              <small>soon</small>
+            </span>
+          </div>
+        ) : null}
       </div>
     </div>
   )
