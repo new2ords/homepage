@@ -132,7 +132,11 @@ export default function CassettePlayer({
   if (!hasVideo && !hasBandcamp) return null
 
   return (
-    <div className={`player-area ${visible ? 'is-visible' : ''}`}>
+    <div
+      className={`player-area ${visible ? 'is-visible' : ''}`}
+      aria-hidden={!visible}
+      inert={visible ? undefined : ''}
+    >
       {hasVideo ? (
         <>
           <div className="youtube-frame" ref={mountRef} />
