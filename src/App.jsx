@@ -301,12 +301,14 @@ export default function App() {
           onClick={enterRelease}
         >
           <span className="meteor-scroll-cue" aria-hidden="true">
-            <span className="meteor-scroll-line" />
-            <span className="meteor-scroll-head" />
-            <span className="meteor-scroll-direction">
-              <i />
-              <i />
-              <i />
+            <span className="meteor-scroll-motion">
+              <span className="meteor-scroll-line" />
+              <span className="meteor-scroll-head" />
+              <span className="meteor-scroll-direction">
+                <i />
+                <i />
+                <i />
+              </span>
             </span>
           </span>
           <span>
@@ -328,12 +330,14 @@ export default function App() {
           onClick={enterLyrics}
         >
           <span className="meteor-scroll-cue" aria-hidden="true">
-            <span className="meteor-scroll-line" />
-            <span className="meteor-scroll-head" />
-            <span className="meteor-scroll-direction">
-              <i />
-              <i />
-              <i />
+            <span className="meteor-scroll-motion">
+              <span className="meteor-scroll-line" />
+              <span className="meteor-scroll-head" />
+              <span className="meteor-scroll-direction">
+                <i />
+                <i />
+                <i />
+              </span>
             </span>
           </span>
           <span>{artist.release.title}</span>
