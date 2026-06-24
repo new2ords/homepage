@@ -1235,6 +1235,7 @@ button:focus-visible {
 
   .meteor-scroll-cue {
     height: 190%;
+    rotate: 180deg;
   }
 
   .reading-layer::before {
