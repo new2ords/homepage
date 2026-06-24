@@ -68,3 +68,7 @@ add a `notes` layer opened with `#notes`, with entries stored as local Markdown.
 This remains compatible with GitHub Pages and avoids introducing a router, CMS,
 or backend. If search indexing becomes important later, migrate only the notes
 to generated static pages.
+
+## Copyright
+
+© 2026 new²ords. All rights reserved.
