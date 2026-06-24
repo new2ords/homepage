@@ -221,6 +221,10 @@ button:focus-visible {
   font-size: 0.42em;
 }
 
+.artist-name-ords {
+  font-style: italic;
+}
+
 .title-invitation {
   display: flex;
   margin-top: 16px;
@@ -415,6 +419,53 @@ button:focus-visible {
   border-radius: 5px;
 }
 
+.bandcamp-frame {
+  display: block;
+  width: 100%;
+  height: 42px;
+  border: 0;
+  border-radius: 5px;
+  background: #020408;
+}
+
+.bandcamp-shell {
+  display: grid;
+  gap: 8px;
+}
+
+.bandcamp-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  color: rgba(243, 244, 246, 0.5);
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 0.98rem;
+  font-style: italic;
+  letter-spacing: 0.02em;
+}
+
+.bandcamp-meta a {
+  color: rgba(243, 244, 246, 0.65);
+  transition: color 0.3s ease;
+  text-decoration: none;
+}
+
+.bandcamp-meta a:hover,
+.bandcamp-meta a:focus-visible {
+  color: var(--accent);
+}
+
+.bandcamp-meta span {
+  white-space: nowrap;
+  text-transform: lowercase;
+}
+
+.bandcamp-meta a {
+  white-space: nowrap;
+  text-transform: lowercase;
+}
+
 .player-state {
   margin: 7px 0 0;
   color: rgba(243, 244, 246, 0.38);
@@ -434,7 +485,8 @@ button:focus-visible {
 }
 
 .edge-navigation.is-hidden {
-  opacity: 0;
+  opacity: 0 !important;
+  pointer-events: none;
 }
 
 .edge-link {
@@ -848,6 +900,17 @@ button:focus-visible {
 .available-links a > span:first-child {
   display: grid;
   gap: 4px;
+}
+
+.external-arrow {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.25;
 }
 
 .available-links strong {

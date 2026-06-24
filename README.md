@@ -49,6 +49,22 @@ YouTube's current playback time, pauses during buffering, and recalculates after
 seeks. Set `lyricOffsetMs` once during authoring if every timestamp feels
 consistently early or late.
 
+### Local timing tool
+
+Run `npm run dev`, then open:
+
+```text
+http://localhost:5173/?timing
+```
+
+Choose a local audio file and press Space when each displayed word begins.
+Undo with `Cmd+Z` or `Ctrl+Z`, then copy the generated timestamps into
+`src/data/artist.js`.
+
+The selected audio file stays in browser memory. It is not uploaded, copied
+into the repository, or included in the production build. The timing tool is
+available only while running Vite in development mode.
+
 ## Future content
 
 The experience should continue the brand's language of books, poetry, memory,

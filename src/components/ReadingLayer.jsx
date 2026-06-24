@@ -98,20 +98,44 @@ function Elsewhere() {
       </header>
 
       <div className="available-links">
+        <a href={`mailto:${artist.links.email}`}>
+          <span>
+            <strong>write to me</strong>
+            <small>{artist.links.email}</small>
+          </span>
+          <ExternalArrow />
+        </a>
         <a href={artist.links.bandcampMeteor} target="_blank" rel="noreferrer">
           <span>
             <strong>new²ords music & merch</strong>
             <small>bandcamp</small>
           </span>
-          <span aria-hidden="true">↗</span>
+          <ExternalArrow />
         </a>
         <a href={artist.links.discord} target="_blank" rel="noreferrer">
           <span>
             <strong>new²ords book club</strong>
             <small>discord</small>
           </span>
-          <span aria-hidden="true">↗</span>
+          <ExternalArrow />
         </a>
+        {artist.links.instagram ? (
+          <a href={artist.links.instagram} target="_blank" rel="noreferrer">
+            <span>
+              <strong>new²ords art</strong>
+              <small>instagram</small>
+            </span>
+            <ExternalArrow />
+          </a>
+        ) : (
+          <div className="available-link available-link-soon" aria-hidden="true">
+            <span>
+              <strong>instagram</strong>
+              <small>soon</small>
+            </span>
+            <ExternalArrow />
+          </div>
+        )}
       </div>
 
       <div className="forthcoming-links">
@@ -125,5 +149,17 @@ function Elsewhere() {
         </ul>
       </div>
     </div>
+  )
+}
+
+function ExternalArrow() {
+  return (
+    <svg
+      className="external-arrow"
+      viewBox="0 0 20 20"
+      aria-hidden="true"
+    >
+      <path d="M6 14 14 6M8 6h6v6" />
+    </svg>
   )
 }
