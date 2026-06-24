@@ -33,6 +33,26 @@ domain's DNS provider.
 
 Artist and release content lives in `src/data/artist.js`.
 
+## Notes / writing
+
+Add Markdown files to `src/content/notes/`:
+
+```md
+---
+title: every word i owned
+date: 2026-06-23
+excerpt: every word i owned had already been spent
+slug: every-word-i-owned
+image: /notes/every-word-i-owned/cover.jpg
+---
+
+Your note here.
+```
+
+`npm run dev` generates the in-app notes reader. `npm run build` also generates
+crawlable pages at `/notes/` and `/notes/<slug>/`, plus the sitemap and robots
+file. Set `VITE_SITE_URL` as a GitHub Actions variable for canonical URLs.
+
 ## Google Analytics (GA4)
 
 1. Create a free [Google Analytics](https://analytics.google.com/) account and add a **Web** data stream for your domain.

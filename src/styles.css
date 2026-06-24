@@ -189,6 +189,7 @@ button:focus-visible {
 }
 
 .title-button {
+  position: relative;
   border: 0;
   padding: 0.15em 0.25em;
   background: transparent;
@@ -249,6 +250,135 @@ button:focus-visible {
 .artist-name:focus-visible .title-invitation {
   gap: 13px;
   color: var(--accent);
+}
+
+.meteor-scroll-cue {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  left: 50%;
+  width: 28px;
+  height: 205%;
+  color: rgba(190, 218, 255, 0.62);
+  pointer-events: none;
+  transform: translate(-50%, -40%);
+}
+
+.meteor-scroll-line {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 1px;
+  height: 48px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(190, 218, 255, 0.12) 18%,
+    rgba(190, 218, 255, 0.7) 100%
+  );
+  filter: drop-shadow(0 0 3px rgba(147, 197, 253, 0.45));
+  opacity: 0;
+  transform: translateX(-50%);
+  animation: meteor-tail-fall 3.2s var(--ease-expo) infinite;
+}
+
+.meteor-scroll-head {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 0;
+  background: currentColor;
+  box-shadow:
+    0 0 0 1px rgba(243, 244, 246, 0.18),
+    0 0 7px rgba(147, 197, 253, 0.72),
+    0 0 16px rgba(147, 197, 253, 0.38);
+  image-rendering: pixelated;
+  animation: meteor-cue-fall 3.2s var(--ease-expo) infinite;
+}
+
+.meteor-scroll-direction {
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 4px;
+  transform: translateX(-50%);
+  animation: meteor-direction-breathe 2.4s ease-in-out infinite;
+}
+
+.meteor-scroll-direction i {
+  display: block;
+  width: 4px;
+  height: 4px;
+  border-right: 1px solid currentColor;
+  border-bottom: 1px solid currentColor;
+  opacity: 0.25;
+  transform: rotate(45deg);
+}
+
+.meteor-scroll-direction i:nth-child(2) {
+  opacity: 0.48;
+}
+
+.meteor-scroll-direction i:nth-child(3) {
+  opacity: 0.8;
+}
+
+@keyframes meteor-tail-fall {
+  0%,
+  8% {
+    top: -48px;
+    opacity: 0;
+  }
+  18% {
+    opacity: 0.85;
+  }
+  72% {
+    opacity: 0.65;
+  }
+  88%,
+  100% {
+    top: calc(100% - 48px);
+    opacity: 0;
+  }
+}
+
+@keyframes meteor-cue-fall {
+  0%,
+  8% {
+    opacity: 0;
+    top: 0;
+    transform: translateX(-50%) scale(0.45);
+  }
+  18% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+  }
+  72% {
+    opacity: 0.9;
+  }
+  88%,
+  100% {
+    top: 100%;
+    opacity: 0;
+    transform: translateX(-50%) scale(0.35);
+  }
+}
+
+@keyframes meteor-direction-breathe {
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: translate3d(-50%, -2px, 0);
+  }
+  50% {
+    opacity: 0.9;
+    transform: translate3d(-50%, 3px, 0);
+  }
 }
 
 .song-name {
@@ -828,12 +958,15 @@ button:focus-visible {
 }
 
 .notes-list li {
+  padding: 24px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.notes-list li article {
   display: grid;
   grid-template-columns: 36px minmax(0, 1fr) auto;
   gap: 18px;
-  padding: 24px 0;
   align-items: baseline;
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
 }
 
 .notes-list li:last-child {
@@ -887,6 +1020,101 @@ button:focus-visible {
   color: rgba(243, 244, 246, 0.48);
   font-size: 0.95rem;
   font-style: italic;
+}
+
+.note-open,
+.text-button {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: rgba(243, 244, 246, 0.82);
+  cursor: pointer;
+  font: inherit;
+  font-style: italic;
+  text-align: left;
+  transition: color 0.3s ease;
+}
+
+.note-open:hover,
+.note-open:focus-visible,
+.text-button:hover,
+.text-button:focus-visible {
+  color: var(--accent);
+}
+
+.note-permalink {
+  display: inline-block;
+  margin-top: 8px;
+  color: rgba(243, 244, 246, 0.38);
+  font-size: 0.82rem;
+  font-style: italic;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.note-permalink:hover,
+.note-permalink:focus-visible {
+  color: rgba(147, 197, 253, 0.78);
+}
+
+.note-date {
+  color: rgba(243, 244, 246, 0.42);
+  font-size: 0.85rem;
+  font-style: italic;
+  white-space: nowrap;
+}
+
+.note-back {
+  margin-bottom: 28px;
+}
+
+.note-meta {
+  margin: 0;
+  color: rgba(243, 244, 246, 0.5);
+  font-size: 0.95rem;
+  font-style: italic;
+}
+
+.note-hero {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 0 0 36px;
+}
+
+.note-body {
+  color: rgba(243, 244, 246, 0.78);
+  font-size: clamp(1.05rem, 2vw, 1.25rem);
+  font-style: italic;
+  line-height: 1.75;
+}
+
+.note-body h2 {
+  margin: 2.2em 0 0.6em;
+  font-size: clamp(1.35rem, 3vw, 1.75rem);
+  font-weight: 300;
+}
+
+.note-body p {
+  margin: 0 0 1.2em;
+}
+
+.note-body img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 1.8em auto;
+}
+
+.note-body blockquote {
+  margin: 1.8em 0;
+  padding-left: 18px;
+  border-left: 1px solid rgba(255, 255, 255, 0.14);
+  color: rgba(243, 244, 246, 0.62);
+}
+
+.note-body a {
+  color: var(--accent);
 }
 
 .available-links {
@@ -1009,6 +1237,10 @@ button:focus-visible {
     display: none;
   }
 
+  .meteor-scroll-cue {
+    height: 190%;
+  }
+
   .reading-layer::before {
     margin: 10px;
   }
@@ -1023,11 +1255,11 @@ button:focus-visible {
     margin-bottom: 52px;
   }
 
-  .notes-list li {
+  .notes-list li article {
     grid-template-columns: 26px minmax(0, 1fr);
   }
 
-  .forthcoming {
+  .note-date {
     grid-column: 2;
   }
 
