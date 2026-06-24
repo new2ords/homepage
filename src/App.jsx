@@ -241,7 +241,7 @@ export default function App() {
       >
         <button className="title-button song-name" onClick={enterLyrics}>
           <span>{artist.release.title}</span>
-          <small className="title-invitation song-listen-link">
+          <small className="title-invitation">
             <span aria-hidden="true">—</span> listen <span aria-hidden="true">—</span>
           </small>
         </button>
