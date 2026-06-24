@@ -35,11 +35,8 @@ export default function App() {
   const wheelLockedRef = useRef(false)
   const inputLockTimeoutRef = useRef(null)
   const touchStartRef = useRef(null)
-<<<<<<< Updated upstream
-=======
   const suppressClickUntilRef = useRef(0)
   const activeLayerRef = useRef(activeLayer)
->>>>>>> Stashed changes
   const closeLayerRef = useRef(() => {})
   const moveHorizontallyRef = useRef(() => false)
 
