@@ -33,15 +33,19 @@ export default function CassettePlayer({
   const mountRef = useRef(null)
   const playerRef = useRef(null)
   const stateRef = useRef(-1)
+  const visibleRef = useRef(visible)
+  const sampleIntervalRef = useRef(null)
+  const syncSamplingRef = useRef(() => {})
   const [playerState, setPlayerState] = useState('unstarted')
 
   const hasVideo = Boolean(videoId)
   const hasBandcamp = Boolean(bandcampTrackId)
 
+  visibleRef.current = visible
+
   useEffect(() => {
     if (!hasVideo) return undefined
     let cancelled = false
-    let sampleInterval
 
     const sample = () => {
       const player = playerRef.current
@@ -56,6 +60,23 @@ export default function CassettePlayer({
         buffering: stateRef.current === window.YT.PlayerState.BUFFERING,
       })
     }
+
+    const stopSampling = () => {
+      if (sampleIntervalRef.current) {
+        window.clearInterval(sampleIntervalRef.current)
+        sampleIntervalRef.current = null
+      }
+    }
+
+    const syncSampling = () => {
+      stopSampling()
+      const playing = stateRef.current === window.YT?.PlayerState?.PLAYING
+      if (visibleRef.current && playing) {
+        sampleIntervalRef.current = window.setInterval(sample, SAMPLE_INTERVAL)
+      }
+    }
+
+    syncSamplingRef.current = syncSampling
 
     loadYouTubeApi().then((YT) => {
       if (cancelled || !mountRef.current) return
@@ -75,7 +96,7 @@ export default function CassettePlayer({
           onReady: () => {
             setPlayerState('ready')
             sample()
-            sampleInterval = window.setInterval(sample, SAMPLE_INTERVAL)
+            syncSampling()
           },
           onStateChange: (event) => {
             stateRef.current = event.data
@@ -88,6 +109,7 @@ export default function CassettePlayer({
             }
             setPlayerState(labels[event.data] || 'unstarted')
             sample()
+            syncSampling()
           },
         },
       })
@@ -95,12 +117,17 @@ export default function CassettePlayer({
 
     return () => {
       cancelled = true
-      window.clearInterval(sampleInterval)
+      syncSamplingRef.current = () => {}
+      stopSampling()
       playerRef.current?.destroy?.()
       playerRef.current = null
       stateRef.current = -1
     }
   }, [hasVideo, onPlaybackSample, videoId])
+
+  useEffect(() => {
+    syncSamplingRef.current()
+  }, [visible])
 
   if (!hasVideo && !hasBandcamp) return null
 

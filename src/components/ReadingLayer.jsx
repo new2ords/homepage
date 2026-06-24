@@ -14,7 +14,7 @@ export default function ReadingLayer({ layer, onClose, onNavigate }) {
         aria-modal={layer === 'notes' ? 'true' : undefined}
         aria-hidden={layer !== 'notes'}
         aria-labelledby="notes-heading"
-        inert={layer !== 'notes'}
+        tabIndex={layer === 'notes' ? undefined : -1}
       >
         <Notes />
       </section>
@@ -27,7 +27,7 @@ export default function ReadingLayer({ layer, onClose, onNavigate }) {
         aria-modal={layer === 'elsewhere' ? 'true' : undefined}
         aria-hidden={layer !== 'elsewhere'}
         aria-labelledby="elsewhere-heading"
-        inert={layer !== 'elsewhere'}
+        tabIndex={layer === 'elsewhere' ? undefined : -1}
       >
         <Elsewhere />
       </section>
@@ -37,17 +37,17 @@ export default function ReadingLayer({ layer, onClose, onNavigate }) {
         type="button"
         aria-label="Return to the main page"
         aria-hidden={!layer}
-        inert={!layer}
+        tabIndex={layer ? undefined : -1}
         onClick={onClose}
       >
-        main
+        <span className="reading-desktop-return-label">main</span>
       </button>
 
       <nav
         className={`reading-navigation ${layer ? 'is-visible' : ''}`}
         aria-label="Reading pages"
         aria-hidden={!layer}
-        inert={!layer}
+        tabIndex={layer ? undefined : -1}
       >
         <button
           type="button"
