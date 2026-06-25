@@ -221,6 +221,13 @@ function formatNoteDate(value) {
 }
 
 function Elsewhere() {
+  const listeningPlatforms = [
+    { name: 'bandcamp', url: artist.links.bandcampMeteor },
+    { name: 'spotify', url: artist.links.spotifyMeteor },
+    { name: 'apple music', url: '' },
+    { name: 'youtube music', url: '' },
+  ]
+
   return (
     <div className="reading-page elsewhere-page">
       <header className="reading-header">
@@ -236,38 +243,38 @@ function Elsewhere() {
           </span>
           <ExternalArrow />
         </a>
-        <a href={artist.links.bandcampMeteor} target="_blank" rel="noreferrer">
+        <div className="available-link listening-link">
           <span>
             <strong>listen to meteor</strong>
-            <small>bandcamp</small>
+            <small>meteor</small>
           </span>
-          <ExternalArrow />
-        </a>
-        {artist.links.spotifyMeteor ? (
-          <a href={artist.links.spotifyMeteor} target="_blank" rel="noreferrer">
-            <span>
-              <strong>listen wherever you do</strong>
-              <small>spotify</small>
-            </span>
-            <ExternalArrow />
-          </a>
-        ) : null}
-        {artist.links.youtube ? (
-          <a href={artist.links.youtube} target="_blank" rel="noreferrer">
-            <span>
-              <strong>from the room</strong>
-              <small>youtube</small>
-            </span>
-            <ExternalArrow />
-          </a>
-        ) : null}
-        <a href={artist.links.discord} target="_blank" rel="noreferrer">
-          <span>
-            <strong>join the book club</strong>
-            <small>discord</small>
-          </span>
-          <ExternalArrow />
-        </a>
+          <div className="listening-platforms" aria-label="Streaming platforms">
+            {listeningPlatforms.map((platform) =>
+              platform.url ? (
+                <a
+                  key={platform.name}
+                  className="listening-platform is-available"
+                  href={platform.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label={`Listen on ${platform.name}`}
+                >
+                  {platform.name}
+                  <span aria-hidden="true">↗</span>
+                </a>
+              ) : (
+                <span
+                  key={platform.name}
+                  className="listening-platform is-pending"
+                  title="Coming soon"
+                >
+                  {platform.name}
+                  <i aria-hidden="true" />
+                </span>
+              ),
+            )}
+          </div>
+        </div>
         {artist.links.instagram ? (
           <a href={artist.links.instagram} target="_blank" rel="noreferrer">
             <span>
@@ -284,22 +291,22 @@ function Elsewhere() {
             </span>
           </div>
         )}
-        {!artist.links.spotifyMeteor ? (
-          <div className="available-link available-link-soon">
+        {artist.links.youtube ? (
+          <a href={artist.links.youtube} target="_blank" rel="noreferrer">
             <span>
-              <strong>listen wherever you do</strong>
-              <small>soon</small>
+              <strong>from the room</strong>
+              <small>youtube</small>
             </span>
-          </div>
-        ) : null}
-        {!artist.links.youtube ? (
+            <ExternalArrow />
+          </a>
+        ) : (
           <div className="available-link available-link-soon">
             <span>
               <strong>from the room</strong>
               <small>soon</small>
             </span>
           </div>
-        ) : null}
+        )}
       </div>
     </div>
   )
