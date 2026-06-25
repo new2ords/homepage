@@ -135,7 +135,7 @@ export default function CassettePlayer({
     <div
       className={`player-area ${visible ? 'is-visible' : ''}`}
       aria-hidden={!visible}
-      inert={visible ? undefined : ''}
+      inert={!visible}
     >
       {hasVideo ? (
         <>

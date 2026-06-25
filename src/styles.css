@@ -1241,10 +1241,10 @@ button:focus-visible {
   color: var(--accent);
 }
 
-.listening-platform.is-available > span {
-  font-size: 0.65em;
+.listening-platform .external-arrow {
+  width: 11px;
+  height: 11px;
   opacity: 0.55;
-  transform: translateY(-1px);
 }
 
 .listening-platform.is-pending {

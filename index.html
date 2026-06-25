@@ -19,8 +19,14 @@
       name="twitter:description"
       content="every word i owned had already been spent"
     />
-    <meta name="theme-color" content="#020408" />
+    <meta name="theme-color" content="#070706" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;1,300&display=swap"
+      rel="stylesheet"
+    />
     <title>new²ords</title>
     <style>
       html,
@@ -28,7 +34,7 @@
         margin: 0;
         width: 100%;
         height: 100%;
-        background: #020408;
+        background: #070706;
       }
 
       #root {
@@ -43,14 +49,35 @@
         inset: 0;
         display: grid;
         place-items: center;
-        background: #020408;
-        color: rgba(243, 244, 246, 0.72);
-        font-family: Garamond, Georgia, serif;
-        font-size: clamp(2.5rem, 8vw, 4.5rem);
-        font-style: italic;
-        font-weight: 400;
+        background:
+          radial-gradient(
+            circle at center,
+            rgba(145, 169, 170, 0.045),
+            transparent 38%
+          ),
+          #070706;
+        color: #ded5bf;
+        font-family: 'Cormorant Garamond', Garamond, Georgia, serif;
+        font-size: clamp(4.25rem, 10vw, 7rem);
+        font-weight: 300;
         letter-spacing: -0.05em;
+        line-height: 0.95;
+        text-shadow:
+          0.45px 0 rgba(170, 129, 75, 0.3),
+          -0.35px 0 rgba(83, 112, 116, 0.22),
+          0 0 12px rgba(145, 169, 170, 0.16),
+          0 0 38px rgba(145, 169, 170, 0.07);
         transition: opacity 0.45s ease;
+      }
+
+      #boot-screen sup {
+        position: relative;
+        top: -0.2em;
+        font-size: 0.42em;
+      }
+
+      #boot-screen .boot-ords {
+        font-style: italic;
       }
 
       html.app-ready #root {
@@ -65,7 +92,9 @@
     </style>
   </head>
   <body>
-    <div id="boot-screen" aria-hidden="true">new²ords</div>
+    <div id="boot-screen" aria-hidden="true">
+      new<sup>2</sup><span class="boot-ords">ords</span>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
