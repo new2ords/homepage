@@ -155,7 +155,7 @@ export default function CassettePlayer({
           <iframe
             className="bandcamp-frame"
             title="Listen to meteor on Bandcamp"
-            src={`https://bandcamp.com/EmbeddedPlayer/track=${bandcampTrackId}/size=small/bgcol=020408/linkcol=93c5fd/transparent=true/`}
+            src={`https://bandcamp.com/EmbeddedPlayer/track=${bandcampTrackId}/size=small/bgcol=070706/linkcol=91a9aa/transparent=true/`}
             seamless
           />
         </div>
