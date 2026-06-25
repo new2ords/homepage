@@ -37,7 +37,6 @@ export default function App() {
   const touchStartRef = useRef(null)
   const suppressClickUntilRef = useRef(0)
   const activeLayerRef = useRef(activeLayer)
-  const closeLayerRef = useRef(() => {})
   const moveHorizontallyRef = useRef(() => false)
 
   const goBack = useCallback(() => {
@@ -50,7 +49,14 @@ export default function App() {
 
   const moveHorizontally = useCallback(
     (direction) => {
-      if (activeLayer === 'notes' || activeLayer === 'elsewhere') {
+      if (activeLayer === 'notes') {
+        if (direction < 0) return false
+        closeLayer()
+        return true
+      }
+
+      if (activeLayer === 'elsewhere') {
+        if (direction > 0) return false
         closeLayer()
         return true
       }
@@ -61,7 +67,7 @@ export default function App() {
     [activeLayer, closeLayer, openLayer],
   )
 
-  closeLayerRef.current = closeLayer
+  activeLayerRef.current = activeLayer
   moveHorizontallyRef.current = moveHorizontally
 
   const lockInput = useCallback((duration) => {
@@ -213,9 +219,11 @@ export default function App() {
       const vertical = Math.abs(deltaY) > Math.abs(deltaX) * 1.1
 
       if (layer && horizontal && !start.wasScrolling) {
-        suppressGhostClick()
-        closeLayerRef.current()
-        lockInput(700)
+        const direction = deltaX < 0 ? 1 : -1
+        if (moveHorizontallyRef.current(direction)) {
+          suppressGhostClick()
+          lockInput(700)
+        }
         return
       }
 

@@ -43,7 +43,7 @@ export default function ReadingLayer({
         aria-modal={layer === 'notes' ? 'true' : undefined}
         aria-hidden={layer !== 'notes'}
         aria-labelledby={noteSlug ? 'note-heading' : 'notes-heading'}
-        inert={layer === 'notes' ? undefined : ''}
+        inert={layer !== 'notes'}
         tabIndex={-1}
       >
         <Notes
@@ -62,7 +62,7 @@ export default function ReadingLayer({
         aria-modal={layer === 'elsewhere' ? 'true' : undefined}
         aria-hidden={layer !== 'elsewhere'}
         aria-labelledby="elsewhere-heading"
-        inert={layer === 'elsewhere' ? undefined : ''}
+        inert={layer !== 'elsewhere'}
         tabIndex={-1}
       >
         <Elsewhere />
@@ -73,7 +73,7 @@ export default function ReadingLayer({
         type="button"
         aria-label="Return to the main page"
         aria-hidden={!layer}
-        inert={layer ? undefined : ''}
+        inert={!layer}
         tabIndex={layer ? undefined : -1}
         onClick={onClose}
       >
@@ -84,7 +84,7 @@ export default function ReadingLayer({
         className={`reading-navigation ${layer ? 'is-visible' : ''}`}
         aria-label="Reading pages"
         aria-hidden={!layer}
-        inert={layer ? undefined : ''}
+        inert={!layer}
       >
         <button
           type="button"
@@ -260,7 +260,7 @@ function Elsewhere() {
                   aria-label={`Listen on ${platform.name}`}
                 >
                   {platform.name}
-                  <span aria-hidden="true">↗</span>
+                  <ExternalArrow />
                 </a>
               ) : (
                 <span

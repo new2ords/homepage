@@ -6,7 +6,7 @@ export default function EdgeNavigation({ visible, activeLayer, onOpen }) {
       className={`edge-navigation ${hidden ? 'is-hidden' : ''}`}
       aria-label="Writing and external links"
       aria-hidden={hidden}
-      inert={hidden ? '' : undefined}
+      inert={hidden}
     >
       <button
         className="edge-link edge-link-notes"
