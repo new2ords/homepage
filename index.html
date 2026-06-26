@@ -76,6 +76,12 @@
         font-size: 0.42em;
       }
 
+      #boot-screen .boot-logo {
+        display: inline-flex;
+        align-items: baseline;
+        justify-content: center;
+      }
+
       #boot-screen .boot-ords {
         font-style: italic;
       }
@@ -93,7 +99,7 @@
   </head>
   <body>
     <div id="boot-screen" aria-hidden="true">
-      new<sup>2</sup><span class="boot-ords">ords</span>
+      <span class="boot-logo">new<sup>2</sup><span class="boot-ords">ords</span></span>
     </div>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
