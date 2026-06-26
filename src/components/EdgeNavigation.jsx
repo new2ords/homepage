@@ -1,5 +1,11 @@
+import { notesListUrl } from '../lib/routing'
+
 export default function EdgeNavigation({ visible, activeLayer, onOpen }) {
   const hidden = !visible || activeLayer !== null
+  const openLayer = (event, layer) => {
+    event.preventDefault()
+    onOpen(layer)
+  }
 
   return (
     <nav
@@ -8,24 +14,24 @@ export default function EdgeNavigation({ visible, activeLayer, onOpen }) {
       aria-hidden={hidden}
       inert={hidden}
     >
-      <button
+      <a
         className="edge-link edge-link-notes"
-        type="button"
+        href={notesListUrl()}
         tabIndex={hidden ? -1 : undefined}
-        onClick={() => onOpen('notes')}
+        onClick={(event) => openLayer(event, 'notes')}
       >
         <span>notes</span>
         <small>between the feels</small>
-      </button>
-      <button
+      </a>
+      <a
         className="edge-link edge-link-elsewhere"
-        type="button"
+        href="/elsewhere/"
         tabIndex={hidden ? -1 : undefined}
-        onClick={() => onOpen('elsewhere')}
+        onClick={(event) => openLayer(event, 'elsewhere')}
       >
         <span>find me</span>
         <small>elsewhere</small>
-      </button>
+      </a>
     </nav>
   )
 }

@@ -132,13 +132,16 @@ function Notes({ noteSlug, onOpenNote, onBackToNotes }) {
                 </span>
                 <div>
                   <h3>
-                    <button
+                    <a
                       className="note-open"
-                      type="button"
-                      onClick={() => onOpenNote(note.slug)}
+                      href={notePath(note.slug)}
+                      onClick={(event) => {
+                        event.preventDefault()
+                        onOpenNote(note.slug)
+                      }}
                     >
                       {note.title}
-                    </button>
+                    </a>
                   </h3>
                   <p>{note.excerpt}</p>
                   <a className="note-permalink" href={notePath(note.slug)}>
