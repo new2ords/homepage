@@ -3,11 +3,13 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import matter from 'gray-matter'
 import { marked } from 'marked'
+import { artist } from '../src/data/artist.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const root = path.resolve(__dirname, '..')
 const contentDir = path.join(root, 'src/content/notes')
 const publicNotesDir = path.join(root, 'public/notes')
+const publicElsewhereDir = path.join(root, 'public/elsewhere')
 const generatedFile = path.join(root, 'src/data/notes.generated.js')
 
 const siteUrl = (process.env.VITE_SITE_URL || 'https://new2ords.com').replace(/\/$/, '')
@@ -326,6 +328,79 @@ function renderNotePage(note) {
 </html>`
 }
 
+function renderElsewherePage() {
+  const canonical = `${siteUrl}/elsewhere/`
+  const platformLinks = [
+    { name: 'bandcamp', url: artist.links.bandcampMeteor },
+    { name: 'spotify', url: artist.links.spotifyMeteor },
+    { name: 'instagram', url: artist.links.instagram },
+    { name: 'youtube', url: artist.links.youtube },
+    { name: 'discord', url: artist.links.discord },
+  ]
+    .filter((link) => link.url)
+    .map(
+      (link) => `
+        <li>
+          <a href="${escapeHtml(link.url)}" rel="me noreferrer">${escapeHtml(link.name)}</a>
+        </li>
+      `,
+    )
+    .join('')
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'ProfilePage',
+    name: `${siteName} — elsewhere`,
+    description: `Official links for ${siteName}.`,
+    url: canonical,
+    mainEntity: {
+      '@type': 'MusicGroup',
+      name: siteName,
+      url: siteUrl,
+      email: artist.links.email,
+      sameAs: [
+        artist.links.bandcampMeteor,
+        artist.links.instagram,
+        artist.links.youtube,
+        artist.links.discord,
+        artist.links.spotifyMeteor,
+      ].filter(Boolean),
+    },
+  }
+
+  return `<!doctype html>
+<html lang="en">
+  <head>${headMeta({
+    title: `${siteName} — elsewhere`,
+    description: `Official links for ${siteName}.`,
+    canonical,
+    type: 'profile',
+    jsonLd,
+  })}</head>
+  <body>
+    <main class="reading-page">
+      <nav class="site-nav" aria-label="Site">
+        <a href="/">home</a>
+        <a href="/notes/">notes</a>
+        <a href="/elsewhere/">elsewhere</a>
+      </nav>
+      <header class="reading-header">
+        <p class="eyebrow">find me</p>
+        <h1>elsewhere</h1>
+      </header>
+      <ul class="notes-list">
+        ${
+          artist.links.email
+            ? `<li><h2><a href="mailto:${escapeHtml(artist.links.email)}">write to me</a></h2><p>${escapeHtml(artist.links.email)}</p></li>`
+            : ''
+        }
+        ${platformLinks}
+      </ul>
+    </main>
+  </body>
+</html>`
+}
+
 function writeGeneratedModule(notes) {
   const payload = notes.map(({ slug, title, date, excerpt, image, html }) => ({
     slug,
@@ -344,9 +419,15 @@ function writeGeneratedModule(notes) {
 
 function writeStaticPages(notes) {
   fs.rmSync(publicNotesDir, { recursive: true, force: true })
+  fs.rmSync(publicElsewhereDir, { recursive: true, force: true })
   fs.mkdirSync(publicNotesDir, { recursive: true })
+  fs.mkdirSync(publicElsewhereDir, { recursive: true })
 
   fs.writeFileSync(path.join(publicNotesDir, 'index.html'), renderIndexPage(notes))
+  fs.writeFileSync(
+    path.join(publicElsewhereDir, 'index.html'),
+    renderElsewherePage(),
+  )
 
   for (const note of notes) {
     const noteDir = path.join(publicNotesDir, note.slug)
@@ -359,6 +440,7 @@ function writeSitemap(notes) {
   const urls = [
     `${siteUrl}/`,
     `${siteUrl}/notes/`,
+    `${siteUrl}/elsewhere/`,
     ...notes.map((note) => `${siteUrl}/notes/${note.slug}/`),
   ]
 

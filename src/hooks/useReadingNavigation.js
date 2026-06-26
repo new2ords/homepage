@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { appUrlForRoute, parseReadingRoute } from '../lib/routing'
+import { appUrlForRoute, homeUrl, parseReadingRoute } from '../lib/routing'
 
 export function useReadingNavigation() {
   const [route, setRoute] = useState(parseReadingRoute)
@@ -60,14 +60,29 @@ export function useReadingNavigation() {
     window.history.replaceState(
       null,
       '',
-      `${window.location.pathname}${window.location.search}`,
+      homeUrl(),
     )
   }, [])
 
   useEffect(() => {
     const syncRoute = () => {
-      setRoute(parseReadingRoute())
+      const nextRoute = parseReadingRoute()
+      setRoute(nextRoute)
+
+      if (window.location.hash && nextRoute.layer) {
+        window.history.replaceState(
+          {
+            ...window.history.state,
+            layer: nextRoute.layer,
+            noteSlug: nextRoute.noteSlug,
+            readingEntry: true,
+          },
+          '',
+          appUrlForRoute(nextRoute.layer, nextRoute.noteSlug),
+        )
+      }
     }
+    syncRoute()
     window.addEventListener('hashchange', syncRoute)
     window.addEventListener('popstate', syncRoute)
     return () => {
