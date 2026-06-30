@@ -13,6 +13,11 @@ export const artist = {
     title: 'meteor',
     bandcampTrackId: '1562974215',
     youtubeVideoId: '',
+    liveRoom: {
+      title: 'from the room',
+      caption: '',
+      youtubeVideoId: '',
+    },
     // Adjust once during authoring if every lyric feels consistently early/late.
     lyricOffsetMs: 0,
     // Replace null with each word's start time in seconds.

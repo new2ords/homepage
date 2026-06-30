@@ -46,6 +46,14 @@ export default function ReadingLayer({
         inert={layer !== 'notes'}
         tabIndex={-1}
       >
+        <button
+          className="reading-desktop-return reading-desktop-return-notes"
+          type="button"
+          aria-label="Return to the main page"
+          onClick={onClose}
+        >
+          <span className="reading-desktop-return-label">main</span>
+        </button>
         <Notes
           noteSlug={noteSlug}
           onOpenNote={onOpenNote}
@@ -65,20 +73,16 @@ export default function ReadingLayer({
         inert={layer !== 'elsewhere'}
         tabIndex={-1}
       >
+        <button
+          className="reading-desktop-return reading-desktop-return-elsewhere"
+          type="button"
+          aria-label="Return to the main page"
+          onClick={onClose}
+        >
+          <span className="reading-desktop-return-label">main</span>
+        </button>
         <Elsewhere />
       </section>
-
-      <button
-        className={`reading-desktop-return reading-desktop-return-${layer || 'hidden'}`}
-        type="button"
-        aria-label="Return to the main page"
-        aria-hidden={!layer}
-        inert={!layer}
-        tabIndex={layer ? undefined : -1}
-        onClick={onClose}
-      >
-        <span className="reading-desktop-return-label">main</span>
-      </button>
 
       <nav
         className={`reading-navigation ${layer ? 'is-visible' : ''}`}

@@ -49,6 +49,18 @@ image: /notes/every-word-i-owned/cover.jpg
 Your note here.
 ```
 
+Embed YouTube videos in notes with either a plain YouTube URL on its own line:
+
+```md
+https://www.youtube.com/watch?v=dQw4w9WgXcQ
+```
+
+or the explicit shortcode:
+
+```md
+::youtube[dQw4w9WgXcQ]{title="meteor"}
+```
+
 `npm run dev` generates the in-app notes reader. `npm run build` also generates
 crawlable pages at `/notes/` and `/notes/<slug>/`, plus the sitemap and robots
 file. Set `VITE_SITE_URL` as a GitHub Actions variable for canonical URLs.
@@ -89,6 +101,12 @@ The visible native YouTube player is the playback source. The lyric cloud reads
 YouTube's current playback time, pauses during buffering, and recalculates after
 seeks. Set `lyricOffsetMs` once during authoring if every timestamp feels
 consistently early or late.
+
+The release screen has a two-signal galaxy menu: `meteor` enters the lyric
+cloud, and `from the room` opens the YouTube-backed player. Set
+`artist.release.liveRoom.youtubeVideoId` for that live video. The surrounding
+play, pause, mute, and seek controls call YouTube's iframe API, while YouTube
+remains the playback engine.
 
 ### Local timing tool
 
