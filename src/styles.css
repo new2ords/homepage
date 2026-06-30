@@ -133,7 +133,7 @@ button:focus-visible {
   z-index: 6;
   pointer-events: none;
   background: radial-gradient(
-    ellipse at center,
+    circle at center,
     transparent 43%,
     var(--vignette-mid) 72%,
     var(--vignette-edge) 100%
