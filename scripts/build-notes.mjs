@@ -31,6 +31,45 @@ function toAbsoluteUrl(value) {
   return `${siteUrl}${value.startsWith('/') ? value : `/${value}`}`
 }
 
+function getYouTubeVideoId(value) {
+  const text = String(value || '').trim()
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtube\.com\/embed\/|youtu\.be\/)([A-Za-z0-9_-]{6,})/,
+    /^([A-Za-z0-9_-]{6,})$/,
+  ]
+  for (const pattern of patterns) {
+    const match = text.match(pattern)
+    if (match?.[1]) return match[1]
+  }
+  return ''
+}
+
+function renderYouTubeEmbed(videoId, title = 'YouTube video') {
+  const id = getYouTubeVideoId(videoId)
+  if (!id) return ''
+  const safeTitle = escapeHtml(title || 'YouTube video')
+  const src = `https://www.youtube.com/embed/${escapeHtml(id)}?playsinline=1&controls=1&modestbranding=1&rel=0`
+
+  return `<figure class="note-video">
+  <div class="note-video-frame">
+    <iframe title="${safeTitle}" src="${src}" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+  </div>
+  <figcaption>${safeTitle}</figcaption>
+</figure>`
+}
+
+function expandMediaShortcodes(content) {
+  return content
+    .replace(
+      /^::youtube\[([^\]]+)\](?:\{title="([^"]+)"\})?\s*$/gm,
+      (_, videoId, title) => renderYouTubeEmbed(videoId, title),
+    )
+    .replace(
+      /^(https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=[^\s]+|youtube\.com\/embed\/[^\s]+|youtu\.be\/[^\s]+))\s*$/gm,
+      (url) => renderYouTubeEmbed(url),
+    )
+}
+
 function normalizeDate(value) {
   if (!value) return ''
   if (value instanceof Date && !Number.isNaN(value.getTime())) {
@@ -69,7 +108,7 @@ function loadNotes() {
         date,
         excerpt,
         image,
-        html: marked.parse(content),
+        html: marked.parse(expandMediaShortcodes(content)),
       }
     })
     .sort((a, b) => b.date.localeCompare(a.date))
@@ -173,6 +212,31 @@ function pageStyles() {
       padding-left: 18px;
       border-left: 1px solid rgba(255, 255, 255, 0.14);
       color: rgba(243, 244, 246, 0.62);
+    }
+    .note-video {
+      margin: 2em 0;
+      color: rgba(243, 244, 246, 0.48);
+    }
+    .note-video-frame {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(243, 244, 246, 0.08);
+      border-radius: 5px;
+      background: #020408;
+      box-shadow: inset 0 0 34px rgba(0, 0, 0, 0.55);
+      aspect-ratio: 16 / 9;
+    }
+    .note-video-frame iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+    .note-video figcaption {
+      margin-top: 10px;
+      font-size: 0.88rem;
+      font-style: italic;
     }
   `
 }

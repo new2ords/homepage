@@ -4,10 +4,19 @@ import CassettePlayer from './components/CassettePlayer'
 import EdgeNavigation from './components/EdgeNavigation'
 import LyricsGalaxy from './components/LyricsGalaxy'
 import ReadingLayer from './components/ReadingLayer'
+import ReleaseGalaxyMenu from './components/ReleaseGalaxyMenu'
 import Starfield from './components/Starfield'
+import YouTubePlayer from './components/YouTubePlayer'
 import { artist } from './data/artist'
 import { useReadingNavigation } from './hooks/useReadingNavigation'
 import { getAnalyticsPath, trackPageView } from './lib/analytics'
+
+const VIEW = {
+  home: 'home',
+  release: 'release',
+  lyrics: 'lyrics',
+  live: 'live',
+}
 
 const LEVEL = {
   artist: 0,
@@ -15,8 +24,22 @@ const LEVEL = {
   lyrics: 2,
 }
 
+const SIGNAL = {
+  meteor: 0,
+  live: 1,
+}
+
+function levelForView(view) {
+  if (view === VIEW.lyrics) return LEVEL.lyrics
+  if (view === VIEW.release || view === VIEW.live) return LEVEL.release
+  return LEVEL.artist
+}
+
 export default function App() {
-  const [level, setLevel] = useState(LEVEL.artist)
+  const [view, setView] = useState(() => getInitialView())
+  const [activeSignal, setActiveSignal] = useState(() =>
+    getInitialView() === VIEW.live ? SIGNAL.live : SIGNAL.meteor,
+  )
   const {
     activeLayer,
     noteSlug,
@@ -32,22 +55,29 @@ export default function App() {
     playing: false,
     buffering: false,
   })
+  const [releaseMotion, setReleaseMotion] = useState({ step: 0, direction: 0 })
   const wheelLockedRef = useRef(false)
   const inputLockTimeoutRef = useRef(null)
+  const releaseWheelIntentRef = useRef(0)
+  const releaseWheelResetRef = useRef(null)
   const touchStartRef = useRef(null)
   const suppressClickUntilRef = useRef(0)
   const activeLayerRef = useRef(activeLayer)
-  const moveHorizontallyRef = useRef(() => false)
+  const viewRef = useRef(view)
+  const activeSignalRef = useRef(activeSignal)
+  const moveReadingHorizontallyRef = useRef(() => false)
+  const level = levelForView(view)
+  const releaseVisible = view === VIEW.release || view === VIEW.live
 
-  const goBack = useCallback(() => {
-    setLevel((current) => Math.max(LEVEL.artist, current - 1))
-  }, [])
+  activeLayerRef.current = activeLayer
+  viewRef.current = view
+  activeSignalRef.current = activeSignal
 
   const updatePlayback = useCallback((sample) => {
     setPlayback(sample)
   }, [])
 
-  const moveHorizontally = useCallback(
+  const moveReadingHorizontally = useCallback(
     (direction) => {
       if (activeLayer === 'notes') {
         if (direction < 0) return false
@@ -67,8 +97,7 @@ export default function App() {
     [activeLayer, closeLayer, openLayer],
   )
 
-  activeLayerRef.current = activeLayer
-  moveHorizontallyRef.current = moveHorizontally
+  moveReadingHorizontallyRef.current = moveReadingHorizontally
 
   const lockInput = useCallback((duration) => {
     wheelLockedRef.current = true
@@ -81,10 +110,72 @@ export default function App() {
     }, duration)
   }, [])
 
+  const travelToSignal = useCallback((nextSignal) => {
+    const clamped = Math.max(SIGNAL.meteor, Math.min(SIGNAL.live, nextSignal))
+    const direction = clamped - activeSignalRef.current
+    if (!direction) return false
+
+    setActiveSignal(clamped)
+    setReleaseMotion((current) => ({
+      step: current.step + 1,
+      direction,
+      intensity: 1,
+      kind: 'travel',
+    }))
+    return true
+  }, [])
+
+  const pulseUniverse = useCallback((kind, direction = 1) => {
+    setReleaseMotion((current) => ({
+      step: current.step + 1,
+      direction,
+      intensity: 1,
+      kind,
+    }))
+  }, [])
+
+  const activateSignal = useCallback(() => {
+    pulseUniverse('enter', activeSignalRef.current === SIGNAL.live ? 0.6 : 1)
+    if (activeSignalRef.current === SIGNAL.live) {
+      setActiveSignal(SIGNAL.live)
+      setView(VIEW.live)
+      return
+    }
+
+    setActiveSignal(SIGNAL.meteor)
+    setView(VIEW.lyrics)
+  }, [pulseUniverse])
+
+  const goRelease = useCallback((signal = SIGNAL.meteor) => {
+    setActiveSignal(signal)
+    setView(VIEW.release)
+  }, [])
+
+  const goBack = useCallback(() => {
+    const currentView = viewRef.current
+    if (currentView === VIEW.live) {
+      pulseUniverse('exit', -0.6)
+      goRelease(SIGNAL.live)
+      return
+    }
+    if (currentView === VIEW.lyrics) {
+      pulseUniverse('exit', -1)
+      goRelease(SIGNAL.meteor)
+      return
+    }
+    if (currentView === VIEW.release) {
+      pulseUniverse('exit', -0.45)
+      setView(VIEW.home)
+    }
+  }, [goRelease, pulseUniverse])
+
   useEffect(
     () => () => {
       if (inputLockTimeoutRef.current) {
         window.clearTimeout(inputLockTimeoutRef.current)
+      }
+      if (releaseWheelResetRef.current) {
+        window.clearTimeout(releaseWheelResetRef.current)
       }
     },
     [],
@@ -97,47 +188,107 @@ export default function App() {
         else closeLayer()
         return
       }
-      if (event.key === 'ArrowLeft') {
-        moveHorizontally(-1)
+
+      if (activeLayer) {
+        if (event.key === 'ArrowLeft') moveReadingHorizontally(-1)
+        if (event.key === 'ArrowRight') moveReadingHorizontally(1)
         return
       }
-      if (event.key === 'ArrowRight') {
-        moveHorizontally(1)
+
+      if (view === VIEW.home) {
+        if (event.key === 'ArrowLeft') moveReadingHorizontally(-1)
+        if (event.key === 'ArrowRight') moveReadingHorizontally(1)
+        if (event.key === 'ArrowDown') goRelease(SIGNAL.meteor)
         return
       }
-      if (activeLayer) return
-      if (event.key === 'Escape' && level > LEVEL.artist) goBack()
-      if (event.key === 'ArrowUp') {
-        setLevel((current) => Math.max(LEVEL.artist, current - 1))
+
+      if (view === VIEW.release) {
+        if (event.key === 'Escape' || event.key === 'ArrowUp') {
+          pulseUniverse('exit', -0.45)
+          setView(VIEW.home)
+          return
+        }
+        if (event.key === 'ArrowLeft') travelToSignal(activeSignalRef.current - 1)
+        if (event.key === 'ArrowRight') travelToSignal(activeSignalRef.current + 1)
+        if (event.key === 'ArrowDown' || event.key === 'Enter') activateSignal()
+        return
       }
-      if (event.key === 'ArrowDown') {
-        setLevel((current) => Math.min(LEVEL.lyrics, current + 1))
+
+      if (event.key === 'Escape' || event.key === 'ArrowUp') {
+        goBack()
       }
     }
-    const onWheel = (event) => {
-      const horizontalDelta =
-        Math.abs(event.deltaX) > Math.abs(event.deltaY)
-          ? event.deltaX
-          : event.shiftKey
-            ? event.deltaY
-            : 0
 
-      if (Math.abs(horizontalDelta) >= 20) {
-        if (wheelLockedRef.current) return
-        if (moveHorizontally(horizontalDelta > 0 ? 1 : -1)) {
-          lockInput(700)
+    const onWheel = (event) => {
+      const horizontalDelta = getHorizontalWheelDelta(event)
+
+      if (activeLayer) {
+        if (Math.abs(horizontalDelta) >= 20 && !wheelLockedRef.current) {
+          if (moveReadingHorizontally(horizontalDelta > 0 ? 1 : -1)) {
+            lockInput(700)
+          }
         }
         return
       }
 
-      if (activeLayer) return
-      if (Math.abs(event.deltaY) < 20 || wheelLockedRef.current) return
+      if (view === VIEW.home) {
+        if (Math.abs(horizontalDelta) >= 20) {
+          if (wheelLockedRef.current) return
+          if (moveReadingHorizontally(horizontalDelta > 0 ? 1 : -1)) {
+            lockInput(700)
+          }
+          return
+        }
 
-      lockInput(900)
-      setLevel((current) => {
-        const direction = event.deltaY > 0 ? 1 : -1
-        return Math.max(LEVEL.artist, Math.min(LEVEL.lyrics, current + direction))
-      })
+        if (event.deltaY > 20 && !wheelLockedRef.current) {
+          pulseUniverse('enter', 0.5)
+          goRelease(SIGNAL.meteor)
+          lockInput(560)
+        }
+        return
+      }
+
+      if (view === VIEW.release) {
+        if (Math.abs(horizontalDelta) >= 4) {
+          releaseWheelIntentRef.current += horizontalDelta
+          if (releaseWheelResetRef.current) {
+            window.clearTimeout(releaseWheelResetRef.current)
+          }
+          releaseWheelResetRef.current = window.setTimeout(() => {
+            releaseWheelIntentRef.current = 0
+          }, 180)
+
+          if (
+            Math.abs(releaseWheelIntentRef.current) >= 34 &&
+            !wheelLockedRef.current
+          ) {
+            const direction = releaseWheelIntentRef.current > 0 ? 1 : -1
+            releaseWheelIntentRef.current = 0
+            if (travelToSignal(activeSignalRef.current + direction)) {
+              lockInput(680)
+            }
+          }
+          return
+        }
+
+        if (event.deltaY < -20 && !wheelLockedRef.current) {
+          pulseUniverse('exit', -0.45)
+          setView(VIEW.home)
+          lockInput(640)
+          return
+        }
+
+        if (event.deltaY > 20 && !wheelLockedRef.current) {
+          activateSignal()
+          lockInput(640)
+        }
+        return
+      }
+
+      if (event.deltaY < -20 && !wheelLockedRef.current) {
+        goBack()
+        lockInput(640)
+      }
     }
 
     window.addEventListener('keydown', onKeyDown)
@@ -148,13 +299,17 @@ export default function App() {
     }
   }, [
     activeLayer,
+    activateSignal,
     backToNotes,
     closeLayer,
     goBack,
-    level,
+    goRelease,
     lockInput,
-    moveHorizontally,
+    moveReadingHorizontally,
     noteSlug,
+    pulseUniverse,
+    travelToSignal,
+    view,
   ])
 
   useEffect(() => {
@@ -212,6 +367,7 @@ export default function App() {
       const distance = Math.hypot(deltaX, deltaY)
       const elapsed = performance.now() - start.startedAt
       const layer = activeLayerRef.current
+      const currentView = viewRef.current
 
       if (distance < 40 || elapsed > 1200) return
 
@@ -220,7 +376,7 @@ export default function App() {
 
       if (layer && horizontal && !start.wasScrolling) {
         const direction = deltaX < 0 ? 1 : -1
-        if (moveHorizontallyRef.current(direction)) {
+        if (moveReadingHorizontallyRef.current(direction)) {
           suppressGhostClick()
           lockInput(700)
         }
@@ -229,24 +385,47 @@ export default function App() {
 
       if (!horizontal && !vertical) return
 
-      if (horizontal) {
-        suppressGhostClick()
-        if (moveHorizontallyRef.current(deltaX < 0 ? 1 : -1)) {
-          lockInput(700)
+      if (currentView === VIEW.home) {
+        if (horizontal) {
+          suppressGhostClick()
+          if (moveReadingHorizontallyRef.current(deltaX < 0 ? 1 : -1)) {
+            lockInput(700)
+          }
+          return
+        }
+
+        if (vertical && deltaY < 0) {
+          suppressGhostClick()
+          goRelease(SIGNAL.meteor)
+          lockInput(620)
         }
         return
       }
 
-      if (!layer && vertical) {
+      if (currentView === VIEW.release) {
         suppressGhostClick()
-        lockInput(700)
-        setLevel((current) => {
-          const direction = deltaY < 0 ? 1 : -1
-          return Math.max(
-            LEVEL.artist,
-            Math.min(LEVEL.lyrics, current + direction),
-          )
-        })
+        if (horizontal) {
+          travelToSignal(activeSignalRef.current + (deltaX < 0 ? 1 : -1))
+          lockInput(680)
+          return
+        }
+        if (vertical && deltaY > 0) {
+          pulseUniverse('exit', -0.45)
+          setView(VIEW.home)
+          lockInput(640)
+          return
+        }
+        if (vertical && deltaY < 0) {
+          activateSignal()
+          lockInput(640)
+        }
+        return
+      }
+
+      if (vertical && deltaY > 0) {
+        suppressGhostClick()
+        goBack()
+        lockInput(640)
       }
     }
 
@@ -268,30 +447,58 @@ export default function App() {
       window.removeEventListener('touchcancel', onTouchCancel)
       window.removeEventListener('click', onClick, true)
     }
-  }, [lockInput])
+  }, [activateSignal, goBack, goRelease, lockInput, pulseUniverse, travelToSignal])
 
   useEffect(() => {
     trackPageView(getAnalyticsPath(level, activeLayer, noteSlug))
   }, [level, activeLayer, noteSlug])
 
-  const enterRelease = () => setLevel(LEVEL.release)
-  const enterLyrics = () => setLevel(LEVEL.lyrics)
+  const enterRelease = useCallback(() => goRelease(SIGNAL.meteor), [goRelease])
+  const enterLyrics = useCallback(() => {
+    pulseUniverse('enter', 1)
+    setActiveSignal(SIGNAL.meteor)
+    setView(VIEW.lyrics)
+  }, [pulseUniverse])
+  const enterLiveRoom = useCallback(() => {
+    pulseUniverse('enter', 0.6)
+    setActiveSignal(SIGNAL.live)
+    setView(VIEW.live)
+  }, [pulseUniverse])
+  const closeLiveRoom = useCallback(() => {
+    pulseUniverse('exit', -0.6)
+    goRelease(SIGNAL.live)
+  }, [goRelease, pulseUniverse])
+  const hoverSignal = useCallback((signal) => {
+    const direction = signal - activeSignalRef.current
+    setReleaseMotion((current) => ({
+      step: current.step + 1,
+      direction: direction || 0.35,
+      intensity: 0.2,
+      kind: 'hover',
+    }))
+  }, [])
 
   return (
     <main className={`experience level-${level}`}>
-      <Starfield level={level} paused={activeLayer !== null} />
-      <Atmosphere lyricsVisible={level === LEVEL.lyrics} />
+      <Starfield
+        level={level}
+        paused={activeLayer !== null}
+        releaseMotion={releaseMotion}
+        activeSignal={activeSignal}
+        view={view}
+      />
+      <Atmosphere lyricsVisible={level === LEVEL.lyrics || releaseVisible} />
       <EdgeNavigation
-        visible={level === LEVEL.artist}
+        visible={view === VIEW.home}
         activeLayer={activeLayer}
         onOpen={openLayer}
       />
 
       <button
-        className={`icon-button back-button ${level > LEVEL.artist ? 'is-visible' : ''}`}
+        className={`icon-button back-button ${view !== VIEW.home ? 'is-visible' : ''}`}
         type="button"
         aria-label="Go back"
-        tabIndex={level > LEVEL.artist && !activeLayer ? undefined : -1}
+        tabIndex={view !== VIEW.home && !activeLayer ? undefined : -1}
         onClick={goBack}
       >
         <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -300,12 +507,12 @@ export default function App() {
       </button>
 
       <section
-        className={`center-view artist-view ${level === LEVEL.artist ? 'is-active' : ''}`}
-        aria-hidden={level !== LEVEL.artist}
+        className={`center-view artist-view ${view === VIEW.home ? 'is-active' : ''}`}
+        aria-hidden={view !== VIEW.home}
       >
         <button
           className="title-button artist-name"
-          tabIndex={level === LEVEL.artist && !activeLayer ? undefined : -1}
+          tabIndex={view === VIEW.home && !activeLayer ? undefined : -1}
           onClick={enterRelease}
         >
           <span className="meteor-scroll-cue" aria-hidden="true">
@@ -322,51 +529,66 @@ export default function App() {
           <span>
             new<sup>2</sup><span className="artist-name-ords">ords</span>
           </span>
-          <small className="title-invitation">
-            <span aria-hidden="true">—</span> enter <span aria-hidden="true">—</span>
-          </small>
-        </button>
-      </section>
-
-      <section
-        className={`center-view song-view ${level === LEVEL.release ? 'is-active' : ''}`}
-        aria-hidden={level !== LEVEL.release}
-      >
-        <button
-          className="title-button song-name"
-          tabIndex={level === LEVEL.release && !activeLayer ? undefined : -1}
-          onClick={enterLyrics}
-        >
-          <span className="meteor-scroll-cue" aria-hidden="true">
-            <span className="meteor-scroll-motion">
-              <span className="meteor-scroll-line" />
-              <span className="meteor-scroll-head" />
-              <span className="meteor-scroll-direction">
-                <i />
-                <i />
-                <i />
-              </span>
-            </span>
-          </span>
-          <span>{artist.release.title}</span>
-          <small className="title-invitation">
-            <span aria-hidden="true">—</span> listen <span aria-hidden="true">—</span>
-          </small>
         </button>
       </section>
 
       <LyricsGalaxy
         lyrics={artist.release.lyrics}
-        visible={level === LEVEL.lyrics}
+        visible={view === VIEW.lyrics}
         playback={playback}
         offsetSeconds={artist.release.lyricOffsetMs / 1000}
       />
+
+      <ReleaseGalaxyMenu
+        visible={releaseVisible}
+        liveActive={view === VIEW.live}
+        activeIndex={activeSignal}
+        onSelect={travelToSignal}
+        onActivate={activateSignal}
+        onEnterLyrics={enterLyrics}
+        onEnterLive={enterLiveRoom}
+        onHover={hoverSignal}
+      />
+
+      <section
+        className={`live-room-player ${view === VIEW.live ? 'is-visible' : ''}`}
+        aria-hidden={view !== VIEW.live}
+        inert={view !== VIEW.live}
+        onWheelCapture={(event) => {
+          if (event.deltaY < -20) closeLiveRoom()
+        }}
+      >
+        <button
+          className="live-room-close text-button"
+          type="button"
+          onClick={closeLiveRoom}
+        >
+          back to signals
+        </button>
+        <div className="live-room-video-stage">
+          <div
+            className="live-room-frame-wheel-capture"
+            aria-hidden="true"
+            onWheel={(event) => {
+              if (event.deltaY < -20) closeLiveRoom()
+            }}
+          />
+          <YouTubePlayer
+            videoId={artist.release.liveRoom.youtubeVideoId}
+            title={artist.release.liveRoom.title}
+            caption={artist.release.liveRoom.caption}
+            visible={view === VIEW.live}
+            chromeless
+          />
+        </div>
+      </section>
 
       <CassettePlayer
         bandcampTrackId={artist.release.bandcampTrackId}
         bandcampUrl={artist.links.bandcampMeteor}
         videoId={artist.release.youtubeVideoId}
-        visible={level === LEVEL.lyrics}
+        title={artist.release.title}
+        visible={view === VIEW.lyrics}
         playback={playback}
         onPlaybackSample={updatePlayback}
       />
@@ -381,4 +603,19 @@ export default function App() {
       />
     </main>
   )
+}
+
+function getHorizontalWheelDelta(event) {
+  if (Math.abs(event.deltaX) > Math.abs(event.deltaY) * 0.65) {
+    return event.deltaX
+  }
+  return event.shiftKey ? event.deltaY : 0
+}
+
+function getInitialView() {
+  const queryView = new URLSearchParams(window.location.search).get('view')
+  if (queryView === 'live') return VIEW.live
+  if (queryView === 'release' || queryView === 'videos') return VIEW.release
+  if (queryView === 'lyrics') return VIEW.lyrics
+  return VIEW.home
 }
