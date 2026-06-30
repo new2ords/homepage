@@ -14,9 +14,9 @@ export const artist = {
     bandcampTrackId: '1562974215',
     youtubeVideoId: '',
     liveRoom: {
-      title: 'live from the room',
-      caption: 'temporary youtube test video',
-      youtubeVideoId: 'dQw4w9WgXcQ',
+      title: 'from the room',
+      caption: '',
+      youtubeVideoId: '',
     },
     // Adjust once during authoring if every lyric feels consistently early/late.
     lyricOffsetMs: 0,

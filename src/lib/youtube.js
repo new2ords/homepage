@@ -24,7 +24,8 @@ export function getYouTubeEmbedUrl(videoId) {
   const params = new URLSearchParams({
     enablejsapi: '1',
     playsinline: '1',
-    controls: '1',
+    controls: '0',
+    disablekb: '1',
     modestbranding: '1',
     rel: '0',
     origin: window.location.origin,
@@ -32,4 +33,3 @@ export function getYouTubeEmbedUrl(videoId) {
 
   return `https://www.youtube.com/embed/${videoId}?${params.toString()}`
 }
-

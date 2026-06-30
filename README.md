@@ -103,7 +103,7 @@ seeks. Set `lyricOffsetMs` once during authoring if every timestamp feels
 consistently early or late.
 
 The release screen has a two-signal galaxy menu: `meteor` enters the lyric
-cloud, and `live from the room` opens the YouTube-backed player. Set
+cloud, and `from the room` opens the YouTube-backed player. Set
 `artist.release.liveRoom.youtubeVideoId` for that live video. The surrounding
 play, pause, mute, and seek controls call YouTube's iframe API, while YouTube
 remains the playback engine.

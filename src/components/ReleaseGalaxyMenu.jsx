@@ -21,8 +21,9 @@ export default function ReleaseGalaxyMenu({
       },
       {
         id: 'live',
-        title: 'live from the room',
+        title: 'from the room',
         action: onEnterLive,
+        disabled: true,
       },
     ],
     [onEnterLive, onEnterLyrics],
@@ -45,26 +46,34 @@ export default function ReleaseGalaxyMenu({
         {signals.map((signal, index) => {
           const offset = index - activeIndex
           const active = offset === 0
-          const hovered = hoveredIndex === index
+          const disabled = signal.disabled
+          const hovered = hoveredIndex === index && !disabled
           return (
             <button
               className={`release-signal ${active ? 'is-active' : ''} ${
                 hovered ? 'is-hovered' : ''
-              }`}
+              } ${disabled ? 'is-disabled' : ''}`}
               key={signal.id}
+              aria-disabled={disabled}
+              disabled={disabled}
               style={{
                 '--signal-x': `${offset * 34}vw`,
                 '--signal-scale': active ? 1 : 0.72,
-                '--signal-opacity': active ? 1 : 0.42,
+                '--signal-opacity': disabled ? 0.28 : active ? 1 : 0.42,
               }}
               type="button"
               onClick={() => {
+                if (disabled) return
                 if (active) onActivate()
                 else onSelect(index)
               }}
               onBlur={() => setHoveredIndex(null)}
-              onFocus={() => hoverSignal(index)}
-              onPointerEnter={() => hoverSignal(index)}
+              onFocus={() => {
+                if (!disabled) hoverSignal(index)
+              }}
+              onPointerEnter={() => {
+                if (!disabled) hoverSignal(index)
+              }}
               onPointerLeave={() => setHoveredIndex(null)}
             >
               <span className="release-signal-title">{signal.title}</span>

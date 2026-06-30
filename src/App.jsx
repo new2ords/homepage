@@ -29,6 +29,11 @@ const SIGNAL = {
   live: 1,
 }
 
+const THEME = {
+  dark: 'dark',
+  light: 'light',
+}
+
 function levelForView(view) {
   if (view === VIEW.lyrics) return LEVEL.lyrics
   if (view === VIEW.release || view === VIEW.live) return LEVEL.release
@@ -37,6 +42,7 @@ function levelForView(view) {
 
 export default function App() {
   const [view, setView] = useState(() => getInitialView())
+  const [theme, setTheme] = useState(() => getInitialTheme())
   const [activeSignal, setActiveSignal] = useState(() =>
     getInitialView() === VIEW.live ? SIGNAL.live : SIGNAL.meteor,
   )
@@ -72,6 +78,14 @@ export default function App() {
   activeLayerRef.current = activeLayer
   viewRef.current = view
   activeSignalRef.current = activeSignal
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme
+    document
+      .querySelector('meta[name="theme-color"]')
+      ?.setAttribute('content', theme === THEME.light ? '#f4efe4' : '#070706')
+    window.localStorage.setItem('new2ords-theme', theme)
+  }, [theme])
 
   const updatePlayback = useCallback((sample) => {
     setPlayback(sample)
@@ -464,6 +478,19 @@ export default function App() {
     setActiveSignal(SIGNAL.live)
     setView(VIEW.live)
   }, [pulseUniverse])
+  const selectReleaseSignal = useCallback(
+    (signal) => {
+      if (viewRef.current === VIEW.live) {
+        pulseUniverse('exit', signal === SIGNAL.live ? -0.4 : -0.75)
+        setActiveSignal(signal)
+        setView(VIEW.release)
+        return true
+      }
+
+      return travelToSignal(signal)
+    },
+    [pulseUniverse, travelToSignal],
+  )
   const closeLiveRoom = useCallback(() => {
     pulseUniverse('exit', -0.6)
     goRelease(SIGNAL.live)
@@ -477,15 +504,19 @@ export default function App() {
       kind: 'hover',
     }))
   }, [])
+  const toggleTheme = useCallback(() => {
+    setTheme((current) => (current === THEME.light ? THEME.dark : THEME.light))
+  }, [])
 
   return (
-    <main className={`experience level-${level}`}>
+    <main className={`experience level-${level}`} data-theme={theme}>
       <Starfield
         level={level}
         paused={activeLayer !== null}
         releaseMotion={releaseMotion}
         activeSignal={activeSignal}
         view={view}
+        theme={theme}
       />
       <Atmosphere lyricsVisible={level === LEVEL.lyrics || releaseVisible} />
       <EdgeNavigation
@@ -504,6 +535,18 @@ export default function App() {
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path d="m18 15-6-6-6 6" />
         </svg>
+      </button>
+
+      <button
+        className="theme-toggle"
+        type="button"
+        aria-label={`Switch to ${theme === THEME.light ? 'dark' : 'light'} mode`}
+        aria-pressed={theme === THEME.light}
+        onClick={toggleTheme}
+      >
+        <span className="theme-toggle-orbit" aria-hidden="true">
+          <span className="theme-toggle-body" />
+        </span>
       </button>
 
       <section
@@ -543,7 +586,7 @@ export default function App() {
         visible={releaseVisible}
         liveActive={view === VIEW.live}
         activeIndex={activeSignal}
-        onSelect={travelToSignal}
+        onSelect={selectReleaseSignal}
         onActivate={activateSignal}
         onEnterLyrics={enterLyrics}
         onEnterLive={enterLiveRoom}
@@ -566,13 +609,6 @@ export default function App() {
           back to signals
         </button>
         <div className="live-room-video-stage">
-          <div
-            className="live-room-frame-wheel-capture"
-            aria-hidden="true"
-            onWheel={(event) => {
-              if (event.deltaY < -20) closeLiveRoom()
-            }}
-          />
           <YouTubePlayer
             videoId={artist.release.liveRoom.youtubeVideoId}
             title={artist.release.liveRoom.title}
@@ -618,4 +654,15 @@ function getInitialView() {
   if (queryView === 'release' || queryView === 'videos') return VIEW.release
   if (queryView === 'lyrics') return VIEW.lyrics
   return VIEW.home
+}
+
+function getInitialTheme() {
+  const savedTheme = window.localStorage.getItem('new2ords-theme')
+  if (savedTheme === THEME.light || savedTheme === THEME.dark) {
+    return savedTheme
+  }
+
+  return window.matchMedia('(prefers-color-scheme: light)').matches
+    ? THEME.light
+    : THEME.dark
 }
